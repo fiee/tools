@@ -20,5 +20,5 @@ Files
 * mab2bib.py            convert bibliography files from MAB (Marburger Katalog) to BIB (BibTeX)
 * contextproject.py     create parts of ConTeXt projects, i.e. products and components
 * as_indesign.py        access InDesign pages etc. from Python via appscript
-
+* Deutsch-Europa.zip	extended German keyboard layout for MacOS X, makes all latin-based characters accessible
 
