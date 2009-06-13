@@ -1,10 +1,10 @@
 Welcome!
 ========
 
-Me
---
+These are just a few tools that are a bit more than one-off scripts; maybe you can use them.
+
+fiëé visuëlle
 Henning Hraban Ramm
-<hraban@fiee.net>
 http://fiee.net
 
 License
@@ -14,11 +14,11 @@ Python License, unless otherwise mentioned.
 
 Files
 -----
-* mmv.py				multiple move, tried to re-implement the known tool that isn't available for MacOS X 10.5
-* latin1_to_utf8.py		convert text encoding - just rename to use other encodings!
-* latex.py				LaTeX encoding for converter script (rename to e.g. latex_to_utf8.py)
-* mab2bib.py			convert bibliography files from MAB (Marburger Katalog) to BIB (BibTeX)
-* contextproject.py		create parts of ConTeXt projects, i.e. products and components
-* as_indesign.py		access InDesign pages etc. from Python via appscript
+* mmv.py                multiple move, tried to re-implement the known tool that isn't available for MacOS X 10.5
+* latin1_to_utf8.py     convert text encoding - just rename to use other encodings!
+* latex.py              LaTeX encoding for converter script (rename to e.g. latex_to_utf8.py)
+* mab2bib.py            convert bibliography files from MAB (Marburger Katalog) to BIB (BibTeX)
+* contextproject.py     create parts of ConTeXt projects, i.e. products and components
+* as_indesign.py        access InDesign pages etc. from Python via appscript
 
 
