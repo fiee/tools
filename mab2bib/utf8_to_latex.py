@@ -3,14 +3,14 @@
 
 """
 Universelle Textcodierung
-2009-06-15 by Henning Hraban Ramm, fiëe virtuëlle
+2009-06-15 by Henning Hraban Ramm, fiﾑe virtuﾑlle
 
 quellcodierung_to_zielcodierung.py [Optionen] Quelldatei [Zieldatei]
 
-Es können auch ganze Verzeichnisse bearbeitet werden.
+Es kﾚnnen auch ganze Verzeichnisse bearbeitet werden.
 
-Die gewünschte Codierung wird aus dem Dateinamen ermittelt.
-Mögliche Werte sind z.B.
+Die gewﾟnschte Codierung wird aus dem Dateinamen ermittelt.
+Mﾚgliche Werte sind z.B.
 latin1 (iso-8859-1), utf8, macroman, latex (sofern latex.py vorhanden ist)
 
 Optionen:
@@ -46,7 +46,7 @@ def backup(datei):
     return neudatei
 
 def is_hidden(datei):
-	return (datei.startswith('.') or os.sep+'.' in datei)
+    return (datei.startswith('.') or os.sep+'.' in datei)
 
 def convert(source, target, so_enc, ta_enc):
     from_exists = os.path.exists(source)
@@ -59,28 +59,28 @@ def convert(source, target, so_enc, ta_enc):
     #to_name = os.path.basename(target)
 
     if not from_exists:
-    	help(u"Quelle '%s' nicht gefunden!" % from_name)
+        help(u"Quelle '%s' nicht gefunden!" % from_name)
 
     if from_isdir:
-    	if is_hidden(source) and not mode['hidden']:
-    		print u"Ignoriere verstecktes Verzeichnis %s" % source
-    		return
+        if is_hidden(source) and not mode['hidden']:
+            print u"Ignoriere verstecktes Verzeichnis %s" % source
+            return
         if not to_isdir:
             help(u"Wenn die Quelle ein Verzeichnis ist, muss auch das Ziel ein Verzeichnis sein!")
-    	print u"Verarbeite Verzeichnis %s" % source
+        print u"Verarbeite Verzeichnis %s" % source
         dateien = os.listdir(source)
         #if not mode['hidden']:
-        #	dateien = [d for d in dateien if not is_hidden(d)]
+        #    dateien = [d for d in dateien if not is_hidden(d)]
         if mode['filter']:
             dateien = [d for d in dateien if d.endswith(mode['filter'])]
         for datei in dateien:
-        	s = os.path.join(source, datei)
-        	t = os.path.join(target, datei)
-        	convert(s, t, so_enc, ta_enc)
+            s = os.path.join(source, datei)
+            t = os.path.join(target, datei)
+            convert(s, t, so_enc, ta_enc)
     else:
-    	if is_hidden(from_name) and not mode['hidden']:
-    		print u"Ignoriere versteckte Datei %s" % source
-    		return
+        if is_hidden(from_name) and not mode['hidden']:
+            print u"Ignoriere versteckte Datei %s" % source
+            return
         if to_isdir:
             target = os.path.join(target, from_name)
         if not mode['overwrite']:
@@ -118,7 +118,7 @@ for m in modes:
 #print "opts :", opts
 #print "args :", args
 
-# gewünschte Codierung aus dem Dateinamen ablesen
+# gewﾟnschte Codierung aus dem Dateinamen ablesen
 scriptname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 from_enc, to_enc = scriptname.split("_to_")
 

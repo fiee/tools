@@ -1,0 +1,151 @@
+mab2bib & utf8_to_latex
+=======================
+
+Version: 2009-06-15
+
+
+----- [de] ------
+
+Lizenz:  Python-Lizenz (Open Source)
+Autor:   Henning Hraban Ramm, fiëé visuëlle
+Email:   hraban@fiee.net
+URL:     http://www.fiee.net
+
+
+Beschreibung
+------------
+
+Zwei kleine Hilfsprogramme zu BibTeX:
+
+"mab2bib" konvertiert Bibliografiedaten im MAB-Format zu BibTeX
+
+"utf8_to_latex" konvertiert Textdateien in UTF-8-Encoding zu LaTeX-ASCII
+
+
+Voraussetzungen
+---------------
+
+- Python 2.4 (2.3 müsste auch gehen)
+  Für Windows empfehle ich ActivePython, bei den meisten
+  anderen Systemen (Linux, MacOS X und andere Unices) ist
+  Python schon installiert.
+  
+- LaTeX-Codec von D. Eppstein (latex.py, wird mitgeliefert)
+  
+
+Verwendung
+----------
+
+Die Datei latex.py muss im gleichen Verzeichnis liegen
+wie die beiden anderen Skripte!
+(Sie darf natürlich auch sauber als Codec installiert werden,
+das erkläre ich jetzt aber nicht.)
+
+* Konvertierung von Textdateien in UTF-8 in LaTeX mit Babel (aus ä wird "a):
+
+  [python] utf8_to_latex.py <Eingabedatei> [<Ausgabedatei>]
+
+  Fehlt der Ausgabename, wird die alte Datei mit der Endung .bak gesichert
+  und überschrieben.
+  
+  Das Skript kann übrigens für andere Textkonvertierungen einfach kopiert
+  und umbenannt werden, z.B. "macroman_to_latin1.py", die Möglichkeiten
+  richten sich nach den vorhandenen Codecs in der Python-Distribution.
+
+* Konvertierung von MAB-Dateien in Latin-1 (ISO 8859-1) in BibTeX:
+
+  [python] mab2bib.py <MAB-Datei> [<BibTeX-Datei>]
+
+  Ist keine Ausgabedatei angegeben, wird an die Eingabedatei '.bib' angehängt.
+
+
+Probleme
+--------
+
+- Die Skripte sind sehr einfach und fangen viele Fehler nicht ab.
+- An den Ausgabe-Dateien ist in den meisten Fällen noch Handarbeit nötig.
+- Wenn die Eingabecodierung nicht Latin-1 ist (sondern z.B. Mac Roman),
+  muss man in mab2bib.py an der einzigen Stelle, wo "latin-1" steht, die
+  richtige Codierung eintragen (z.B. "mac-roman").
+- Ich hatte keine vollständige Liste von möglichen MAB-Nummern und BibTeX-
+  Schlüsseln, daher muss die Zuweisungstabelle in mab2bib.py eventuell
+  angepasst werden (einfach mal reinschauen, dürfte verständlich sein).
+
+----- [en] -----
+
+License: Python License (Open Source)
+Author:  Henning Hraban Ramm, fiëé visuëlle
+Email:   hraban@fiee.net
+URL:     http://www.fiee.net
+
+Abstract
+--------
+
+Two small tools for BibTeX:
+
+"mab2bib" converts bibliographical data in MAB format into BibTeX
+
+"utf8_to_latex" converts text files in UTF-8 encoding into LaTeX ASCII
+
+
+Prerequisites
+-------------
+
+- Python 2.4 (2.3 should work, too)
+  For Windows I recommend ActivePython, most other OSes
+  (Linux, MacOS X and other Unices) bring Python preinstalled.
+  
+- LaTeX-Codec by D. Eppstein (latex.py, included)
+  
+
+Usage
+-----
+
+The file latex.py must stay in the same directory as the other two scripts!
+(It may get properly installed as a coded instead, but I won't explain that.)
+
+* Convert a text file in UTF-8 into LaTeX with Babel (ä becomes "a)
+
+  [python] utf8_to_latex.py <input file> [<output file>]
+
+  If the ouput file name is missing, the input file is saved with a .bak
+  extension and overwritten.
+  
+  BTW you can simply copy and rename the script for other text conversions,
+  e.g. "macroman_to_latin1.py", only limited by the codecs in your Python
+  installation.
+
+* Convert a MAB file in Latin-1 (ISO 8859-1) into BibTeX:
+
+  [python] mab2bib.py <MAB file> [<BibTeX file>]
+
+  Without an output file name, the input file name is used with a .bib
+  extension added.
+
+
+Problems
+--------
+
+- The scripts are very simple and don't catch a lot or errors.
+- In most cases there's manual work needed at the output files.
+- If the input encoding is any other that Latin-1 (e.g. Mac Roman),
+  you must change the only place in mab2bib.py where you find
+  "latin-1" into the right encoding (e.g. "mac-roman").
+- I didn't get a complete list of MAB numbers and BibTeX keys, therefore
+  you must eventually adapt the mapping table in mab2bib.py (just look
+  into it, it should be easy to understand).
+
+
+
+
+----- [*] -----
+
+Links
+-----
+
+- fiëé Repository:  http://github.com/fiee/tools/tree/master
+- BibTeX und Koala: http://www.ub.uni-konstanz.de/serviceangebote/literaturverwaltung/bibtex.html
+- Python:           http://www.python.org
+- Python-Lizenz:    http://python.org/psf/license/
+- ActivePython:     http://www.activestate.com/Products/Download/Download.plex?id=ActivePython
+
