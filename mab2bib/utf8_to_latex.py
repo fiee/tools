@@ -3,14 +3,14 @@
 
 """
 Universelle Textcodierung
-2009-06-15 by Henning Hraban Ramm, fiﾑe virtuﾑlle
+2009-06-28 by Henning Hraban Ramm, fiëe virtuëlle
 
 quellcodierung_to_zielcodierung.py [Optionen] Quelldatei [Zieldatei]
 
-Es kﾚnnen auch ganze Verzeichnisse bearbeitet werden.
+Es können auch ganze Verzeichnisse bearbeitet werden.
 
-Die gewﾟnschte Codierung wird aus dem Dateinamen ermittelt.
-Mﾚgliche Werte sind z.B.
+Die gewünschte Codierung wird aus dem Dateinamen ermittelt.
+Mögliche Werte sind z.B.
 latin1 (iso-8859-1), utf8, macroman, latex (sofern latex.py vorhanden ist)
 
 Optionen:
@@ -19,11 +19,14 @@ Optionen:
 --hidden             (sonst werden versteckte Dateien ignoriert)
 """
 
-import os, os.path, sys, codecs, getopt, shutil
+import os, sys, codecs, getopt, shutil
 try:
+    sys.path.append(os.path.dirname(__file__))
     import latex
+    latex.register()
 except:
     pass
+    #print u"Couldn't find LaTeX encoding!"
 
 modes = ('filter', 'overwrite', 'hidden')
 mode = {}
@@ -46,9 +49,13 @@ def backup(datei):
     return neudatei
 
 def is_hidden(datei):
-    return (datei.startswith('.') or os.sep+'.' in datei)
+    if os.path.dirname(datei) in ('.', '..'):
+        return false
+    return (os.path.basename(datei).startswith('.') or os.sep+'.' in datei)
 
 def convert(source, target, so_enc, ta_enc):
+    source = os.path.abspath(source)
+    target = os.path.abspath(target)
     from_exists = os.path.exists(source)
     to_exists = os.path.exists(target)
     from_isdir = os.path.isdir(source)
@@ -57,6 +64,16 @@ def convert(source, target, so_enc, ta_enc):
     to_path, to_name = os.path.split(target)
     #from_name = os.path.basename(source)
     #to_name = os.path.basename(target)
+    
+    try:
+        unicode('test', so_enc)
+    except:
+        help(u"Quell-Encoding '%s' nicht gefunden!" % so_enc)
+    
+    try:
+        unicode('test', so_enc).encode(ta_enc)
+    except:
+        help(u"Ziel-Encoding '%s' nicht gefunden!" % ta_enc)
 
     if not from_exists:
         help(u"Quelle '%s' nicht gefunden!" % from_name)
@@ -101,7 +118,7 @@ def convert(source, target, so_enc, ta_enc):
 opts, args = getopt.getopt(sys.argv[1:], "ohf:", ["overwrite","hidden","filter="])
 
 if len(args)<1:
-    help("Zu wenige Parameter angegeben!")
+    help(u"Zu wenige Parameter angegeben!")
 
 for m in modes:
     mode[m] = False
@@ -114,12 +131,8 @@ for m in modes:
                 print u"Modus %s aktiv" % m
             mode[m] = a
 
-#print "modes:", mode
-#print "opts :", opts
-#print "args :", args
-
-# gewﾟnschte Codierung aus dem Dateinamen ablesen
-scriptname = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+# gewünschte Codierung aus dem Dateinamen ablesen
+scriptname = os.path.splitext(os.path.basename(__file__))[0]
 from_enc, to_enc = scriptname.split("_to_")
 
 from_name = to_name = args[0]

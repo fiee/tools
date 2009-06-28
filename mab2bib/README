@@ -1,7 +1,7 @@
 mab2bib & utf8_to_latex
 =======================
 
-Version: 2009-06-15
+Version: 2009-06-28
 
 
 ----- [de] ------
@@ -21,15 +21,13 @@ Zwei kleine Hilfsprogramme zu BibTeX:
 
 "utf8_to_latex" konvertiert Textdateien in UTF-8-Encoding zu LaTeX-ASCII
 
+(MAB = Maschinelles Austauschformat für Bibliotheken)
+
 
 Voraussetzungen
 ---------------
 
-- Python 2.4 (2.3 müsste auch gehen)
-  Für Windows empfehle ich ActivePython, bei den meisten
-  anderen Systemen (Linux, MacOS X und andere Unices) ist
-  Python schon installiert.
-  
+- Python 2.5 (ab 2.3 müsste gehen)
 - LaTeX-Codec von D. Eppstein (latex.py, wird mitgeliefert)
   
 
@@ -91,10 +89,7 @@ Two small tools for BibTeX:
 Prerequisites
 -------------
 
-- Python 2.4 (2.3 should work, too)
-  For Windows I recommend ActivePython, most other OSes
-  (Linux, MacOS X and other Unices) bring Python preinstalled.
-  
+- Python 2.5 (2.3 and up should work)
 - LaTeX-Codec by D. Eppstein (latex.py, included)
   
 
@@ -108,7 +103,7 @@ The file latex.py must stay in the same directory as the other two scripts!
 
   [python] utf8_to_latex.py <input file> [<output file>]
 
-  If the ouput file name is missing, the input file is saved with a .bak
+  If the output file name is missing, the input file is saved with a .bak
   extension and overwritten.
   
   BTW you can simply copy and rename the script for other text conversions,
@@ -147,5 +142,4 @@ Links
 - BibTeX und Koala: http://www.ub.uni-konstanz.de/serviceangebote/literaturverwaltung/bibtex.html
 - Python:           http://www.python.org
 - Python-Lizenz:    http://python.org/psf/license/
-- ActivePython:     http://www.activestate.com/Products/Download/Download.plex?id=ActivePython
 

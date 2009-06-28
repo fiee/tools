@@ -7,6 +7,8 @@ Multiple Move
 
 with pattern containing * and ? wildcards,
 that get replaced by #1, #2 etc. in new pattern
+
+wildcards match everything besides space
 """
 import os, sys, re, glob, unicodedata
 try:
