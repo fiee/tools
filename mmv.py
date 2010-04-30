@@ -13,12 +13,15 @@ wildcards match everything besides space
 import os, sys, re, glob, unicodedata
 try:
 	import locale
-	locale.setlocale(os.environ['LC_ALL'])
+	locale.setlocale(locale.LC_ALL, os.environ['LC_ALL'])
 except:
 	pass
 
-def normalize(s):
-	return unicodedata.normalize('NFC', unicode(s, 'utf-8'))
+def normalize(s1):
+    s = s1
+    if not type(s) is unicode:
+        s = unicode(s1, 'utf-8')
+    return unicodedata.normalize('NFC', s)
 
 source_repl = (
 	('.', '\\.'),
