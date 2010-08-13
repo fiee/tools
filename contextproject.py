@@ -128,6 +128,7 @@ def main():
     ### stop on errors
     if errors:
         print options, args
+        print "See --help for options"
         parser.error('\n\t'.join(errors))
     
     if options.thislevel > 1:
