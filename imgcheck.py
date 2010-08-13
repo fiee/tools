@@ -1,13 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys, os
+import sys, os, unicodedata
 import PIL.Image as Image
-from tools.files import compose, decompose
 
 imgexts = ('.jpg', '.tif', '.pdf', '.bmp', '.pct', '.tga', '.jpeg', '.tiff', '.pict')
 txtexts = ('.doc', '.rtf', '.txt', '.xml', '.html', '.htm', '.indd', '.pdf')
 
+def compose(path):
+    """
+    MacOS X verwendet decomposed UTF-8 im Dateisystem; diese Funktion erzeugt daraus "normales" UTF-8
+    """
+    if type(path) is not unicode:
+        path = unicode(path, 'utf-8')
+    return unicodedata.normalize('NFC', path)
+
+def decompose(path):
+    """
+    MacOS X braucht decomposed UTF-8 im Dateisystem
+    """
+    if type(path) is not unicode:
+        path = unicode(path, 'utf-8')
+    return unicodedata.normalize('NFD', path)
+
 def px2cm(px, dpi=300):
+    """
+    Umrechnung von Pixel in Zentimeter bei der angegebenen Auflösung
+    """
     return px * 2.54 / dpi
 
 def checkimage(filename, path='.'):
