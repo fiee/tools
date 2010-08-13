@@ -20,6 +20,7 @@ Files
 * contextproject.py     create parts of ConTeXt projects, i.e. products and components
 * as_indesign.py        access InDesign pages etc. from Python via appscript
 * Deutsch-Europa.zip    extended German keyboard layout for MacOS X, makes all latin-based characters accessible
+* imgcheck.py           check type and size of an image file (German output)
 
 
 /mab2bib
