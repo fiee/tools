@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 u"""ConTeXt project management
 
-(c) 2009 by Henning Hraban Ramm, fiëé visuëlle
+(c) 2009-2015 by Henning Hraban Ramm, fiëé visuëlle
 
 """
 # after Perl predecessor from 2002
-version = '%prog 2009-03-10'
+version = '%prog 2015-04-28'
 
 import os
 import re
@@ -23,11 +23,18 @@ reProject = re.compile('^\s*\\project\s+(?P<name>\w+)')
 reEnvironment = re.compile('^\s*\\environment\s+(?P<name>\w+)')
 
 def change_parent(options):
+    """
+    insert call for current level into parent level file,
+    e.g. `\component c_myfile` into `prd_myprod.tex`.
+    """
     original = open(options.parentfile, 'rU')
     lines = original.readlines()
     original.close()
     shutil.copy(options.parentfile, options.parentfile.replace(TeXSuffix, BackupSuffix))
     newfile = open(options.parentfile, 'w')
+    thisName = '%s%s' % (prefixes[options.thislevel], options.this) 
+    reIncluded = re.compile('^s*\\%s\s+(%s)' % (options.mode, thisName))
+    alreadyIncluded = False
     lc = -1
     for line in lines:
         lc += 1
@@ -38,18 +45,28 @@ def change_parent(options):
             m = reProject.match(line)
             if m and not options.project:
                 options.project = m.group('name')
+        m = reIncluded.match(line)
+        if m:
+            alreadyIncluded = True
+            print 'Call for %s "%s" already found in %s file "%s"' % (options.mode, options.this, options.parent, options.parentfile)
         # insert before last line
-        if '\\stop%s' % levels[options.parentlevel] in line:
+        if not alreadyIncluded and ('\\stop%s' % levels[options.parentlevel] in line):
             print 'Inserting call for %s "%s" into %s file "%s"' % (options.mode, options.this, options.parent, options.parentfile)
-            newfile.write('\t\\%s %s%s\n' % (options.mode, prefixes[options.thislevel], options.this))
+            newfile.write('\t\\%s %s\n' % (options.mode, thisName))
         newfile.write(line)
     newfile.close()
     return options
 
 def make_file(options):
+    """
+    create new file for current level, using template if there is one
+    """
     newfilename = os.path.join(options.directory, '%s%s%s' % (prefixes[options.thislevel], options.this, TeXSuffix))
     print 'Creating %s file "%s"' % (options.mode, newfilename)
-    options.templatefile = options.mode+IniSuffix
+    if not options.template:
+        options.templatefile = options.mode+IniSuffix
+    else:
+        options.templatefile = options.template
     if not os.path.isfile(options.templatefile):
         print 'Template file "%s" not found (will proceed without template)' % options.templatefile
         lines = ()
@@ -78,9 +95,9 @@ def main():
     parser = OptionParser(usage=usage, version=version, description=__doc__)
     parser.add_option('-m', '--mode', help='create which type of file?', metavar='FILETYPE', default='component')
     parser.add_option('-c', '--component', '--cmp', help='create component file', metavar='NAME')
-    parser.add_option('-p', '--product', '--prd', help='create product file', metavar='NAME')
-    parser.add_option('-j', '--project', '--prj', help='create project file', metavar='NAME')
-    parser.add_option('-e', '--environment', '--env', help='create environment file', metavar='NAME')
+    parser.add_option('-p', '--product', '--prd', help='create or set product file', metavar='NAME')
+    parser.add_option('-j', '--project', '--prj', help='create or set project file', metavar='NAME')
+    parser.add_option('-e', '--environment', '--env', help='create or set environment file', metavar='NAME')
     parser.add_option('-i', '--template', '--ini', metavar='FILENAME', help='use non-default initial template file')
     parser.add_option('-d', '--directory', '--dir', metavar='DIRNAME', help='project path', default=os.curdir)
 
@@ -91,29 +108,30 @@ def main():
     ### project directory defined and available?
     if not os.path.isdir(options.directory):
         try:
-            os.path.mkdirs(options.directory)
+            os.makedirs(options.directory)
             print 'create directory "%s"' % options.directory
-        except:
+        except Exception, e:
+            print e
             errors.append('project path "%s" is not a directory and cannot create' % options.directory)
     
     ### check mode
     if options.mode=='component' and not options.component:
         for l in levels:
-            if eval('options.%s' % l):
+            if hasattr(options, l) and getattr(options, l):
                 options.mode=l
     
-    if not eval ('options.%s' % options.mode):
+    if not hasattr(options, options.mode):
         errors.append('no name given for %s' % options.mode)
     
     ### check if the parent level is defined and its file available
     for i in range(len(levels)):
         if options.mode == levels[i]:
             options.thislevel = i
-            options.this = eval('options.%s' % levels[i])
+            options.this = getattr(options, levels[i])
             options.thisfile = os.path.join(options.directory, "%s%s%s" % (prefixes[i], options.this, TeXSuffix))
             if i>0:
                 options.parentlevel = i-1
-                options.parent = eval('options.%s' % levels[i-1])
+                options.parent = getattr(options, levels[i-1])
                 options.parentfile = "%s%s%s" % (prefixes[i-1], options.parent, TeXSuffix)
                 if i==options.thislevel:
                     if not options.parent:
@@ -122,7 +140,10 @@ def main():
                         if not os.path.isfile(options.parentfile):
                             options.parentfile = os.path.join(options.directory, options.parentfile)
                         if not os.path.isfile(options.parentfile):
-                            errors.append('file "%s" not found' % options.parentfile)                
+                            errors.append('file "%s" not found' % options.parentfile)
+                            options.thislevel = options.parentlevel
+                            options.mode = levels[i+1] #levels[options.mode]
+                            make_file(options)
     
 
     ### stop on errors
