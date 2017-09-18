@@ -21,8 +21,8 @@ TeXSuffix = '.tex'
 IniSuffix = '.ini'
 BackupSuffix = '.bak.tex'
 
-reProject = re.compile('^\s*\\project\s+(?P<name>\w+)')
-reEnvironment = re.compile('^\s*\\environment\s+(?P<name>\w+)')
+reProject = re.compile(r'^\s*\\project\s+(?P<name>\w+)')
+reEnvironment = re.compile(r'^\s*\\environment\s+(?P<name>\w+)')
 
 def change_parent(options):
     """
@@ -37,7 +37,7 @@ def change_parent(options):
     thisName = '%s%s' % (prefixes[options.thislevel], options.this)
     if options.component_directory != os.curdir:
         thisName = os.path.join(options.component_directory, thisName)
-    reIncluded = re.compile('^s*\\%s\s+(%s)' % (options.mode, thisName))
+    reIncluded = re.compile(r'^s*\\%s\s+(%s)' % (options.mode, thisName))
     alreadyIncluded = False
     lc = -1
     for line in lines:
