@@ -121,7 +121,7 @@ The file latex.py must stay in the same directory as the other two scripts!
 Problems
 --------
 
-- The scripts are very simple and don't catch a lot or errors.
+- The scripts are very simple and don't catch a lot of errors.
 - In most cases there's manual work needed at the output files.
 - If the input encoding is any other that Latin-1 (e.g. Mac Roman),
   you must change the only place in mab2bib.py where you find
