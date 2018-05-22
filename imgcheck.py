@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import sys, os, unicodedata
 import PIL.Image as Image
 
@@ -55,7 +56,13 @@ if not os.path.isdir(path):
 
 out = ''
 for root, dirs, files in os.walk(path):
-    pfadname = "\n[%s]\n" % root.strip('.').strip('/')
+    try:
+        root = compose(root)
+        pfadname = "\n[%s]\n" % root.strip('.').strip('/')
+    except UnicodeDecodeError, e:
+        print e
+        print root
+        sys.exit()
     bilder = 0
     subout = ''
     for filename in files:
@@ -66,4 +73,4 @@ for root, dirs, files in os.walk(path):
             subout += checkimage(filename, root)
     if bilder > 0:
         out += pfadname + subout
-print out
+print out.encode('utf-8')
