@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from __future__ import print_function
 import sys, os, unicodedata
 import PIL.Image as Image
 
@@ -11,8 +12,8 @@ def compose(path):
     """
     MacOS X verwendet decomposed UTF-8 im Dateisystem; diese Funktion erzeugt daraus "normales" UTF-8
     """
-    if type(path) is not unicode:
-        path = unicode(path, 'utf-8')
+    #if type(path) is not unicode:
+    #    path = unicode(path, 'utf-8')
     return unicodedata.normalize('NFC', path)
 
 def decompose(path):
@@ -42,7 +43,7 @@ def checkimage(filename, path='.'):
         out += u"%s\n\tFarbmodus: %s\tDateiformat: %s\n\t%4d x %4d px\n" % (filename, img.mode, img.format, x, y)
         out += u"\tbei 300 dpi = %02.2f x %02.2f cm (Optimalgröße)\n\tbei 200 dpi = %02.2f x %02.2f cm (Maximalgröße)\n" \
         %(px2cm(x,300), px2cm(y,300), px2cm(x,200), px2cm(y,200))
-    except Exception, ex:
+    except Exception as ex:
         out += u"%s\tist kein Bild\t%s\n" % (filename, ex)
     return out
 
@@ -51,7 +52,7 @@ if len(sys.argv) > 1:
     path = sys.argv[1]
 
 if not os.path.isdir(path):
-    print "%s ist kein Verzeichnis!" % path
+    print("%s ist kein Verzeichnis!" % path)
     sys.exit(1)
 
 out = ''
@@ -59,9 +60,9 @@ for root, dirs, files in os.walk(path):
     try:
         root = compose(root)
         pfadname = "\n[%s]\n" % root.strip('.').strip('/')
-    except UnicodeDecodeError, e:
-        print e
-        print root
+    except UnicodeDecodeError as ex:
+        print(ex)
+        print(root)
         sys.exit()
     bilder = 0
     subout = ''
@@ -73,4 +74,4 @@ for root, dirs, files in os.walk(path):
             subout += checkimage(filename, root)
     if bilder > 0:
         out += pfadname + subout
-print out.encode('utf-8')
+print(out)
