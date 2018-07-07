@@ -17,6 +17,8 @@ import begin # see http://begins.readthedocs.io/
 def constant_factory(value):
 	return lambda: value
 
+DEFAULT_LANGUAGE = 'de' # TODO: check locale
+
 SECTIONS = 'paragraph chapter section subsection subsubsection subsubsubsection'.split()
 
 SECTION_MAP = { # Style name to section level
@@ -408,6 +410,7 @@ class DOCReader(object):
 		return self.meta
 
 QUOTES = {
+	# double and single quotes in different languages
 	'de': '„“‚‘',
 	'en': '“”‘’',
 }
@@ -439,12 +442,30 @@ def postprocess(text, lang='en'):
 	text = re.sub(r'[ \t]+', ' ', text)
 	return text
 
-def parse(docx, img_dir=None):
-	obj = DOCReader(docx, img_dir=img_dir)
-	res = obj.process()
-	lang = obj.meta['language'] or 'de'
-	res = postprocess(res, lang)
-	return res
+
+def process_doc(docx, img_dir=None, **options):
+	logging.info(docx)
+	if docx.startswith('.') and not docx.startswith('./'):
+		logging.debug('Ignoring hidden file/dir %s', docx)
+		return False
+	if os.path.isdir(docx):
+		logging.info('%s is a directory', doc)
+		for entry in os.scandir(docx):
+			if not entry.name.startswith('.') and entry.is_file():
+				process_doc(entry.path, img_dir)
+	elif os.path.isfile(docx):
+		obj = DOCReader(docx, img_dir=img_dir)
+		result = obj.process()
+		lang = obj.meta['language'] or DEFAULT_LANGUAGE
+		result = postprocess(result, lang) # maybe add configuration switch
+		# target file name is like source file name
+		# TODO: configuration option
+		targetfile = docx.lower().replace(' ', '_').replace('.docx', '.tex')
+		# TODO: check if target exists and save copy
+		with open(targetfile, 'w', encoding='utf-8-sig') as text:
+			text.write(result)
+	else:
+		logging.warn('%s is not a file or directory!', docx)
 
 
 @begin.start(auto_convert=True)
@@ -456,22 +477,23 @@ def main(
 	imagedir: 'Directory for extracted images' = './img',
 	*docs: 'List of documents or directories to convert'):
 	# TODO: more options, e.g. ignore fonts
-	if not os.path.isfile(template):
-		logging.warn('Template %s is not a file. Continuing without template.', template)
+	options = defaultdict(str)
+	if template != 'empty':
+		if not os.path.isdir(templatedir):
+			logging.info('creating template directory %s', templatedir)
+			os.makedirs(templatedir)
+		if not os.path.isfile(template):
+			if os.path.isfile(os.path.join(templatedir, template)):
+				template = os.path.join(templatedir, template)
+			else:
+				logging.warn('Template %s is not a file. Continuing without template.', template)
+	options['template'] = template
 	if not images:
 		imagedir = None
+	else:
+		if not os.path.isdir(imagedir):
+			logging.info('creating image directory %s', templatedir)
+			os.makedirs(imagedir)
+	options['imagedir'] = imagedir
 	for doc in docs:
-		logging.info(doc)
-		if doc.startswith('.') and not doc.startswith('./'):
-			logging.debug('Ignoring hidden file/dir %s', doc)
-			continue
-		if os.path.isdir(doc):
-			# TODO: listdir
-			logging.info('%s is a directory', doc)
-		elif os.path.isfile(doc):
-			content = parse(doc, imagedir)
-			targetfile = doc.lower().replace(' ', '_').replace('.docx', '.tex')
-			with open(targetfile, 'w', encoding='utf-8-sig') as text:
-				text.write(content)
-		else:
-			logging.warn('%s is not a file or directory!', doc)
+		process_doc(doc, imagedir, options)
