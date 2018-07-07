@@ -1,15 +1,18 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Convert from MS Word DOCX to ConTeXt source
+(c) 2018 Henning Hraban Ramm
+License: chose one of BSD, MIT, GPL3+, LGPL
+"""
 import os
-import sys
 from collections import defaultdict
 import re
 import logging
 import zipfile
-
-import begin
 import xml.etree.ElementTree as ET
 from xml.sax import make_parser, handler
+import begin # see http://begins.readthedocs.io/
 
 def constant_factory(value):
 	return lambda: value
@@ -17,6 +20,7 @@ def constant_factory(value):
 SECTIONS = 'paragraph chapter section subsection subsubsection subsubsubsection'.split()
 
 SECTION_MAP = { # Style name to section level
+	# These are still only German names, additions welcome
 	'Titel': 'chapter',
 	'Untertitel': 'section',
 	'Berschrift1': 'chapter',
@@ -28,6 +32,7 @@ SECTION_MAP = { # Style name to section level
 
 STYLE_MAP = {
 	# Word tag: ('name', 'ConTeXt start', attr)
+	# 'name' is not used, to be removed
 	'b': ('bold', '\\important{', True),
 	'i': ('italic', '\\emph{', True),
 	'u': ('underline', '\\underbar{', True),
@@ -187,7 +192,6 @@ class ContextHandler(handler.ContentHandler):
 			self.text += '\n\\startparagraph %% %s\n' % style
 			self.text += self.pText
 			self.text += '\n\\stopparagraph\n'
-		#self.text += '\n\\stopparagraph\n\n'
 		self._numPr = defaultdict(constant_factory(False))
 	
 	def r(self, attrs):
@@ -225,6 +229,9 @@ class ContextHandler(handler.ContentHandler):
 	def tab(self, attrs):
 		pass
 		#self.pText += '\t'
+	
+	def br(self, attrs):
+		self.pText += '\\\\\n'
 	
 	def pStyle(self, attrs):
 		self._pPr['style'] = attrs['w:val']
@@ -379,6 +386,7 @@ class DOCReader(object):
 		for name in ('footnote', 'endnote', 'comment'):
 			aux_doc = 'word/%ss.xml' % name
 			if not aux_doc in self.filelist:
+				logging.warn('No %ss found', name)
 				continue
 			obj = AuxReader(self.zipf, aux_doc)
 			temp = obj.process()
@@ -441,11 +449,12 @@ def parse(docx, img_dir=None):
 @begin.start(auto_convert=True)
 @begin.logging
 def main(
-	template: 'TeX template file' = 'empty',
+	template: 'TeX template file' = 'empty', # TODO
 	templatedir: 'Directory for templates' = './tpl',
 	images: 'Extract embedded images?' = True,
 	imagedir: 'Directory for extracted images' = './img',
 	*docs: 'List of documents or directories to convert'):
+	# TODO: more options, e.g. ignore fonts
 	if not os.path.isfile(template):
 		logging.warn('Template %s is not a file. Continuing without template.', template)
 	if not images:
@@ -456,7 +465,7 @@ def main(
 			logging.debug('Ignoring hidden file/dir %s', doc)
 			continue
 		if os.path.isdir(doc):
-			# listdir
+			# TODO: listdir
 			logging.info('%s is a directory', doc)
 		elif os.path.isfile(doc):
 			content = parse(doc, imagedir)
