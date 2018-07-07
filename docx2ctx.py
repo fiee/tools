@@ -31,19 +31,20 @@ SECTION_MAP = { # Style name to section level
 }
 
 STYLE_MAP = {
-	# Word tag: ('name', 'ConTeXt start', attr)
-	# 'name' is not used, to be removed
-	'b': ('bold', '\\important{', True),
-	'i': ('italic', '\\emph{', True),
-	'u': ('underline', '\\underbar{', True),
-	'smallCaps': ('smallcaps', '\\scaps{', True),
-	'strike': ('strike', '\\overstrike{', True),
-	'color': ['color', '\\color[%s]{', 'val'],
-	'lang': ['lang', '{\\language[%s]', 'val'],
-	'highlight': ['highlight', '\\H%s{', 'val'],
-	'super': ('super', '\\high{', True),
-	'sub': ('sub', '\\low{', True),
-	'rFonts': ['font', '{\\F%s{}', 'val'],
+	# Word tag: ('ConTeXt start', attr)
+	# ConTeXt command is always closed with }
+	# attr is True (no parameter) or a string (one parameter, %s)
+	'b': ('\\important{', True),
+	'i': ('\\emph{', True),
+	'u': ('\\underbar{', True),
+	'smallCaps': ('\\scaps{', True),
+	'strike': ('\\overstrike{', True),
+	'color': ['\\color[%s]{', 'val'],
+	'lang': ['{\\language[%s]', 'val'],
+	'highlight': ['\\H%s{', 'val'],
+	'super': ('\\high{', True),
+	'sub': ('\\low{', True),
+	'rFonts': ['{\\F%s{}', 'val'],
 }
 
 PREAMBLE = """
@@ -118,9 +119,9 @@ class ContextHandler(handler.ContentHandler):
 			if tag == 'lang':
 				val, _ = val.split('-')
 			style = STYLE_MAP[tag]
-			if type(style[2]) is str:
-				style[2] = val
-			self.setStyle(tag, style[2])
+			if type(style[1]) is str:
+				style[1] = val
+			self.setStyle(tag, style[1])
 			if tag in ('color', 'highlight'):
 				setup = '\\definecolor[%s][h=%s]\n' % (val, val)
 				if not setup in self.header:
@@ -202,9 +203,9 @@ class ContextHandler(handler.ContentHandler):
 			if self._rPr[key] is True:
 				if key == 'baseline':
 					continue
-				self.pText += STYLE_MAP[key][1]
+				self.pText += STYLE_MAP[key][0]
 			elif self._rPr[key]:
-				self.pText += STYLE_MAP[key][1] % self._rPr[key]
+				self.pText += STYLE_MAP[key][0] % self._rPr[key]
 
 	def t_end(self):
 		for key in self._rPr:
