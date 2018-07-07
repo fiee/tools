@@ -62,8 +62,10 @@ def texquote(text):
 		text = text.replace(c, '\\'+c)
 	return text
 
+
 class ContextHandler(handler.ContentHandler):
-	def __init__(self):
+	def __init__(self, **options):
+		self.options = options or defaultdict(str)
 		self.doctype = 'component' # or text (\starttext or \startcomponent)
 		self.elcount = defaultdict(int) # depth, not used ATM
 		self.allelements = set() # not used ATM
@@ -82,6 +84,12 @@ class ContextHandler(handler.ContentHandler):
 		self.image = {} # current image
 		self.links = [] # list of external references incl. images
 		self.metadata = defaultdict(str)
+		
+		if options['colors'] is False:
+			del STYLE_MAP['color']
+			del STYLE_MAP['highlight']
+		if options['fonts'] is False:
+			del STYLE_MAP['rFonts']
 		
 	def startDocument(self):
 		if self.doctype == 'component':
@@ -106,11 +114,16 @@ class ContextHandler(handler.ContentHandler):
 		self.elhier.append(name)
 		tag = name.replace('w:', '').replace(':', '_')
 		if tag in ('footnote', 'endnote', 'comment'):
+			if self.options[tag+'s'] is False:
+				return
 			#id = int(attrs['w:id'])
 			self.references[tag].append('')
 			self.inRef = tag
 		elif tag in ('footnoteReference', 'endnoteReference', 'commentReference'):
-			self.noteReference(tag.replace('Reference',''), attrs)
+			tag = tag.replace('Reference','')
+			if self.options[tag+'s'] is False:
+				return
+			self.noteReference(tag, attrs)
 		elif tag in STYLE_MAP:
 			if 'w:val' in attrs:
 				val = attrs['w:val']
@@ -246,6 +259,8 @@ class ContextHandler(handler.ContentHandler):
 		self._numPr['numId'] = int(attrs['w:val'])
 	
 	def noteReference(self, name, attrs):
+		if self.options[name+'s'] is False:
+			return
 		text = '??'
 		id = int(attrs['w:id'])
 		try:
@@ -275,6 +290,8 @@ class ContextHandler(handler.ContentHandler):
 			self.image[key] = attrs[key]
 
 	def a_graphic_end(self):
+		if not self.options['images']:
+			return
 		self.text += '''
 		\\startplacefigure[location=here,reference=%(name)s,title={%(descr)s}]%% %(id)s
 		\\externalfigure[%(filename)s]
@@ -303,6 +320,8 @@ class ContextHandler(handler.ContentHandler):
 		del self.elhier[-1]
 		tag = name.replace('w:', '').replace(':', '_')
 		if tag in ('footnote', 'endnote', 'comment'):
+			if self.options[tag+'s'] is False:
+				return
 			logging.debug('registering %s in %s = "%s"', tag, self.references[tag], self.pText)
 			self.references[tag][-1] = self.pText
 			self.inRef = ''
@@ -320,6 +339,14 @@ class ContextHandler(handler.ContentHandler):
 
 class AuxReader(object):
 	def __init__(self, zipf, docname):
+		"""
+		Auxiliary Reader used by DOCReader
+		for processing footnotes, endnotes and comments.
+		Also uses ContextHandler
+		
+		zipf (zipfile.ZipFile): open DOCX file object
+		docname (str): file path within DOCX
+		"""
 		self.docname = docname
 		self.zipf = zipf
 		self.parser = make_parser()
@@ -332,39 +359,50 @@ class AuxReader(object):
 
 
 class DOCReader(object):
-	def __init__(self, docx, img_dir=None):
+	def __init__(self, docx, **options):
+		"""
+		Read a DOCX file and return the text content as string
+		
+		docx (str): file path
+		options (dict):
+		  images (bool): extract images? (True)
+		  comments (bool): process comments? (True)
+		  endnotes (bool): process endnotes? (True)
+		  footnotes (bool): process footnotes? (True)
+		  handler (xml.sax.handler.ContentHandler): handler object (ContextHandler)
+		"""
 		self.docxfile = docx
-		self.img_dir = img_dir
+		if not optons['handler']:
+			options['handler'] = ContextHandler
+		self.options = options
 		self.data = {'links': []}  # save header, footer, document, links
-		self.links = {}
+		self.links = defaultdict(str)
+		self.notes = defaultdict(str)
+		self.meta = defaultdict(str)
 
 		# read file
 		self.zipf = zipfile.ZipFile(self.docxfile)
 		self.filelist = self.zipf.namelist()
 
 		self.parser = make_parser()
-		self.handler = ContextHandler()
+		self.handler = options['handler'](options)
 		self.parser.setContentHandler(self.handler)
 		
 	def process(self):
 		doc_xml = 'word/document.xml'
-		self.meta = defaultdict(str)
-		self.meta = self.process_metadata()
-		links = self.process_links()
-		refs = self.process_notes()
-		self.handler.metadata = self.meta
-		self.handler.references = refs
-		self.handler.links = links
+		self.handler.metadata = self.process_metadata()
+		self.handler.links = self.process_links()
+		self.handler.references = self.process_notes()
 		# get main text
 		self.parser.parse(self.zipf.open(doc_xml))
 		text = self.handler.text
 
-		if self.img_dir is not None:
+		if self.options['images']:
 			# extract images
 			for fname in self.filelist:
 				_, extension = os.path.splitext(fname)
 				if extension in [".jpg", ".jpeg", ".png", ".bmp"]:
-					dst_fname = os.path.join(self.img_dir, os.path.basename(fname))
+					dst_fname = os.path.join(self.options['imagedir'], os.path.basename(fname))
 					with open(dst_fname, "wb") as dst_f:
 						logging.info('Writing image file %s', dst_fname)
 						dst_f.write(self.zipf.read(fname))
@@ -374,10 +412,11 @@ class DOCReader(object):
 		return text.strip()
 
 	def process_links(self):
-		hyperlink_document = 'word/_rels/document.xml.rels'
-		if not hyperlink_document in self.filelist:
-			return {}
-		doc = self.zipf.read(hyperlink_document)
+		link_doc = 'word/_rels/document.xml.rels'
+		if not link_doc in self.filelist:
+			logging.warn('no links found')
+			return self.links
+		doc = self.zipf.read(link_doc)
 		root = ET.fromstring(doc)
 		nodes = [ node.attrib for node in root ]
 		self.links = {node['Id']: node['Target'] for node in nodes}
@@ -385,22 +424,22 @@ class DOCReader(object):
 		return self.links
 
 	def process_notes(self):
-		notes = defaultdict(str)
 		for name in ('footnote', 'endnote', 'comment'):
 			aux_doc = 'word/%ss.xml' % name
-			if not aux_doc in self.filelist:
-				logging.warn('No %ss found', name)
+			if not aux_doc in self.filelist or self.option[name+'s'] is False:
+				logging.warn('no %ss', name)
 				continue
 			obj = AuxReader(self.zipf, aux_doc)
 			temp = obj.process()
-			notes[name] = temp[name]
-		logging.debug(notes)
-		return notes
+			self.notes[name] = temp[name]
+		logging.debug(self.notes)
+		return self.notes
 		
 	def process_metadata(self):
 		meta_doc = 'docProps/core.xml'
 		if not meta_doc in self.filelist:
 			logging.warn('Metadata file not found!')
+			return self.meta
 		doc = self.zipf.read(meta_doc)
 		root = ET.fromstring(doc)
 		for node in root:
@@ -443,7 +482,7 @@ def postprocess(text, lang='en'):
 	return text
 
 
-def process_doc(docx, img_dir=None, **options):
+def process_doc(docx, **options):
 	logging.info(docx)
 	if docx.startswith('.') and not docx.startswith('./'):
 		logging.debug('Ignoring hidden file/dir %s', docx)
@@ -454,10 +493,11 @@ def process_doc(docx, img_dir=None, **options):
 			if not entry.name.startswith('.') and entry.is_file():
 				process_doc(entry.path, img_dir)
 	elif os.path.isfile(docx):
-		obj = DOCReader(docx, img_dir=img_dir)
+		obj = DOCReader(docx, options)
 		result = obj.process()
 		lang = obj.meta['language'] or DEFAULT_LANGUAGE
-		result = postprocess(result, lang) # maybe add configuration switch
+		if not options['raw']:
+			result = postprocess(result, lang)
 		# target file name is like source file name
 		# TODO: configuration option
 		targetfile = docx.lower().replace(' ', '_').replace('.docx', '.tex')
@@ -466,6 +506,7 @@ def process_doc(docx, img_dir=None, **options):
 			text.write(result)
 	else:
 		logging.warn('%s is not a file or directory!', docx)
+	return True
 
 
 @begin.start(auto_convert=True)
@@ -475,9 +516,16 @@ def main(
 	templatedir: 'Directory for templates' = './tpl',
 	images: 'Extract embedded images?' = True,
 	imagedir: 'Directory for extracted images' = './img',
+	fonts: 'Include font switches?' = True,
+	colors: 'Include color settings?' = True,
+	footnotes: 'Include footnotes?' = True,
+	endnotes: 'Include endnotes?' = True,
+	comments: 'Include comments?' = True,
+	raw: 'Don\'t try to enhance markup?' = False,
 	*docs: 'List of documents or directories to convert'):
-	# TODO: more options, e.g. ignore fonts
 	options = defaultdict(str)
+	for key in 'template templatedir images imagedir fonts colors footnotes endnotes comments raw'.split():
+		options[key] = __dir__[key]
 	if template != 'empty':
 		if not os.path.isdir(templatedir):
 			logging.info('creating template directory %s', templatedir)
@@ -485,9 +533,9 @@ def main(
 		if not os.path.isfile(template):
 			if os.path.isfile(os.path.join(templatedir, template)):
 				template = os.path.join(templatedir, template)
+				options['template'] = template
 			else:
 				logging.warn('Template %s is not a file. Continuing without template.', template)
-	options['template'] = template
 	if not images:
 		imagedir = None
 	else:
@@ -496,4 +544,4 @@ def main(
 			os.makedirs(imagedir)
 	options['imagedir'] = imagedir
 	for doc in docs:
-		process_doc(doc, imagedir, options)
+		process_doc(doc, options)
