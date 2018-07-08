@@ -85,28 +85,31 @@ class ContextHandler(handler.ContentHandler):
 		self.links = [] # list of external references incl. images
 		self.metadata = defaultdict(str)
 		
-		if options['colors'] is False:
+		if self.options['colors'] is False:
 			del STYLE_MAP['color']
 			del STYLE_MAP['highlight']
-		if options['fonts'] is False:
+		if self.options['fonts'] is False:
 			del STYLE_MAP['rFonts']
 		
 	def startDocument(self):
-		if self.doctype == 'component':
-			name = self.metadata['title'].replace(' ', '_')
-			self.header = '\\startcomponent c_%s\n' % name
-			self.header += '\\product prd_\n\\project prj_\n'
-			self.metadata['language'] = self.metadata['language'].split('-')[0]
-		self.header += '\n\\setupinteraction[\n' + \
-			'\ttitle={%(title)s},\n' + \
-			'\tsubtitle={%(subject)s},\n' + \
-			'\tkeywords={%(keywords)s},\n' + \
-			'\tauthor={%(creator)s},\n' + \
-			'\tdescription={%(description)s},\n' + \
-			'\t]\n' + \
-			'\\mainlanguage[%(language)s]\n'
-		self.header = self.header % self.metadata
-		self.header += PREAMBLE
+		self.metadata['language'] = self.metadata['language'].split('-')[0]
+		if self.options['template'] == 'empty':
+			if self.doctype == 'component':
+				name = self.metadata['title'].replace(' ', '_')
+				self.header = '\\startcomponent c_%s\n' % name
+				self.header += '\\product prd_\n\\project prj_\n'
+			self.header += '\n\\setupinteraction[\n' + \
+				'\ttitle={%(title)s},\n' + \
+				'\tsubtitle={%(subject)s},\n' + \
+				'\tkeywords={%(keywords)s},\n' + \
+				'\tauthor={%(creator)s},\n' + \
+				'\tdescription={%(description)s},\n' + \
+				'\t]\n' + \
+				'\\mainlanguage[%(language)s]\n'
+			self.header = self.header % self.metadata
+			self.header += PREAMBLE
+		else:
+			self.header = ''
 		
 	def startElement(self, name, attrs):
 		self.elcount[name] += 1
@@ -334,7 +337,9 @@ class ContextHandler(handler.ContentHandler):
 			# close all sections
 			self.text += '\\stop%s\n' % SECTIONS[self.section]
 			self.section -= 1
-		self.text = self.header + self.text + '\n\\stop%s\n' % self.doctype
+		self.text = self.header + self.text
+		if self.options['template'] == 'empty':
+			self.text += '\n\\stop%s\n' % self.doctype
 
 
 class AuxReader(object):
@@ -372,7 +377,7 @@ class DOCReader(object):
 		  handler (xml.sax.handler.ContentHandler): handler object (ContextHandler)
 		"""
 		self.docxfile = docx
-		if not optons['handler']:
+		if not 'handler' in options:
 			options['handler'] = ContextHandler
 		self.options = options
 		self.data = {'links': []}  # save header, footer, document, links
@@ -385,7 +390,7 @@ class DOCReader(object):
 		self.filelist = self.zipf.namelist()
 
 		self.parser = make_parser()
-		self.handler = options['handler'](options)
+		self.handler = options['handler'](**options)
 		self.parser.setContentHandler(self.handler)
 		
 	def process(self):
@@ -426,7 +431,7 @@ class DOCReader(object):
 	def process_notes(self):
 		for name in ('footnote', 'endnote', 'comment'):
 			aux_doc = 'word/%ss.xml' % name
-			if not aux_doc in self.filelist or self.option[name+'s'] is False:
+			if not aux_doc in self.filelist or self.options[name+'s'] is False:
 				logging.warn('no %ss', name)
 				continue
 			obj = AuxReader(self.zipf, aux_doc)
@@ -483,26 +488,39 @@ def postprocess(text, lang='en'):
 
 
 def process_doc(docx, **options):
-	logging.info(docx)
-	if docx.startswith('.') and not docx.startswith('./'):
-		logging.debug('Ignoring hidden file/dir %s', docx)
+	logging.info('processing %s' % docx)
+	if os.path.basename(docx).startswith('.'):
+		logging.warn('Ignoring hidden file/dir %s', docx)
 		return False
 	if os.path.isdir(docx):
-		logging.info('%s is a directory', doc)
+		logging.info('%s is a directory', docx)
 		for entry in os.scandir(docx):
 			if not entry.name.startswith('.') and entry.is_file():
 				process_doc(entry.path, img_dir)
 	elif os.path.isfile(docx):
-		obj = DOCReader(docx, options)
+		logging.info('processing %s', docx)
+		obj = DOCReader(docx, **options)
 		result = obj.process()
 		lang = obj.meta['language'] or DEFAULT_LANGUAGE
 		if not options['raw']:
 			result = postprocess(result, lang)
+		template = '%(TEXT)s'
+		if options['template'] != 'empty':
+			logging.info('processing template')
+			with open(options['template'], 'r', encoding='utf-8') as tpl:
+				template = ''.join(tpl.readlines())
+			DATA = defaultdict(str)
+			DATA.update(obj.meta)
+			DATA['filename'] = os.path.basename(docx)
+			DATA['TEXT'] = result
+			DATA['volume'] = 0
+			result = template % DATA
 		# target file name is like source file name
 		# TODO: configuration option
 		targetfile = docx.lower().replace(' ', '_').replace('.docx', '.tex')
 		# TODO: check if target exists and save copy
 		with open(targetfile, 'w', encoding='utf-8-sig') as text:
+			logging.info('writing %s', targetfile)
 			text.write(result)
 	else:
 		logging.warn('%s is not a file or directory!', docx)
@@ -512,7 +530,7 @@ def process_doc(docx, **options):
 @begin.start(auto_convert=True)
 @begin.logging
 def main(
-	template: 'TeX template file' = 'empty', # TODO
+	template: 'TeX template file (without .tex)' = 'empty', # TODO
 	templatedir: 'Directory for templates' = './tpl',
 	images: 'Extract embedded images?' = True,
 	imagedir: 'Directory for extracted images' = './img',
@@ -525,15 +543,17 @@ def main(
 	*docs: 'List of documents or directories to convert'):
 	options = defaultdict(str)
 	for key in 'template templatedir images imagedir fonts colors footnotes endnotes comments raw'.split():
-		options[key] = __dir__[key]
+		options[key] = locals()[key]
 	if template != 'empty':
 		if not os.path.isdir(templatedir):
 			logging.info('creating template directory %s', templatedir)
 			os.makedirs(templatedir)
 		if not os.path.isfile(template):
-			if os.path.isfile(os.path.join(templatedir, template)):
-				template = os.path.join(templatedir, template)
-				options['template'] = template
+			tplfile = os.path.join(templatedir, template+'.tex')
+			if os.path.isfile(tplfile):
+				template = tplfile
+				options['template'] = tplfile
+				logging.info('loading template %s', tplfile)
 			else:
 				logging.warn('Template %s is not a file. Continuing without template.', template)
 	if not images:
@@ -544,4 +564,4 @@ def main(
 			os.makedirs(imagedir)
 	options['imagedir'] = imagedir
 	for doc in docs:
-		process_doc(doc, options)
+		process_doc(doc, **options)
