@@ -39,8 +39,8 @@ Features
 
 * basic text formatting:
 
-  * bold: ``\strong`` (``\setuphighlight[strong]``is provided)
-  * italic: ``\emph`` (``\setuphighlight[emph]``is provided)
+  * bold: ``\strong`` (``\setuphighlight[strong]`` is provided)
+  * italic: ``\emph`` (``\setuphighlight[emph]`` is provided)
   * sub-/superscript: ``\low``/``\high``
   * underline: ``\underbar``
   * strikethrough: ``\overstrike``
