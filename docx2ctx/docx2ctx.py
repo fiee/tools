@@ -22,7 +22,9 @@ DEFAULT_LANGUAGE = 'de' # TODO: check locale
 SECTIONS = 'paragraph chapter section subsection subsubsection subsubsubsection'.split()
 
 SECTION_MAP = { # Style name to section level
-	# These are still only German names, additions welcome
+	# The internal name may differ from the visible name,
+	# since it must not contain accented letters, spaces etc.
+	# German
 	'Titel': 'chapter',
 	'Untertitel': 'section',
 	'Berschrift1': 'chapter',
@@ -30,13 +32,30 @@ SECTION_MAP = { # Style name to section level
 	'Berschrift3': 'subsection',
 	'Berschrift4': 'subsubsection',
 	'Berschrift5': 'subsubsubsection',
+	# English
+	'Title': 'chapter',
+	'Subtitle': 'section',
+	'Heading1': 'chapter',
+	'Heading2': 'section',
+	'Heading3': 'subsection',
+	'Heading4': 'subsubsection',
+	'Heading5': 'subsubsubsection',
+	# French
+	'Titre': 'chapter',
+	'Soustitre': 'section',
+	'Titre1': 'chapter',
+	'Titre2': 'section',
+	'Titre3': 'subsection',
+	'Titre4': 'subsubsection',
+	'Titre5': 'subsubsubsection',
 }
+# see e.g. https://www.thedoctools.com/downloads/DocTools_List_Of_Built-in_Style_English_Danish_German_French.pdf
 
 STYLE_MAP = {
 	# Word tag: ('ConTeXt start', attr)
 	# ConTeXt command is always closed with }
 	# attr is True (no parameter) or a string (one parameter, %s)
-	'b': ('\\important{', True),
+	'b': ('\\strong{', True),
 	'i': ('\\emph{', True),
 	'u': ('\\underbar{', True),
 	'smallCaps': ('\\scaps{', True),
@@ -51,7 +70,7 @@ STYLE_MAP = {
 
 PREAMBLE = """
 \\definehighlight[emph][style=italic]
-\\definehighlight[important][style=bold]
+\\definehighlight[strong][style=bold]
 \\definehighlight[scaps][style=\\sc]
 """
 
@@ -177,8 +196,8 @@ class ContextHandler(handler.ContentHandler):
 				self.text += '\n\\stop%s\n' % SECTIONS[self.section]
 			if self.section < 2:
 				self.section += 1
-			#self.pText = self.pText.replace('\\important', '')
-			self.pText = re.sub(r'\\important\{(.*?)\}', r'\1', self.pText)
+			#self.pText = self.pText.replace('\\strong', '')
+			self.pText = re.sub(r'\\strong\{(.*?)\}', r'\1', self.pText)
 			self.text += '\n\\start%s[title={%s}]\n' % (SECTIONS[self.section], self.pText)
 		elif style in SECTION_MAP: # it's a title style
 			if self.prev_enum:
