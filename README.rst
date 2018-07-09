@@ -20,10 +20,15 @@ Files
 :latin1_to_utf8.py:   convert text encoding - just rename to use other encodings!
 :latex.py:            LaTeX encoding for converter script (copy the above script to e.g. latex_to_utf8.py)
 :contextproject.py:   create parts of ConTeXt projects, i.e. products and components
-:docx2ctx.py:         convert from DOCX to ConTeXt source
 :as_indesign.py:      access InDesign pages etc. from Python via appscript
 :Deutsch-Europa.zip:  extended German keyboard layout for MacOS X, makes all latin-based characters accessible
 :imgcheck.py:         check type and size of an image file (German output, requires PIL)
+
+
+/docx2ctx
+---------
+
+convert from DOCX to ConTeXt source
 
 
 /mab2bib
