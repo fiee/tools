@@ -10,6 +10,7 @@ that get replaced by #1, #2 etc. in new pattern
 
 wildcards match everything besides space
 """
+from __future__ import unicode_literals, print_function
 import os, sys, re, glob, unicodedata
 try:
 	import locale
@@ -17,10 +18,7 @@ try:
 except:
 	pass
 
-def normalize(s1):
-    s = s1
-    if not type(s) is unicode:
-        s = unicode(s1, 'utf-8')
+def normalize(s):
     return unicodedata.normalize('NFC', s)
 
 source_repl = (
@@ -35,7 +33,7 @@ reTargetWildcard = re.compile('#(\d+)', re.I|re.U)
 os.path.supports_unicode_filenames = True
 
 if len(sys.argv) < 3:
-	print __doc__ % sys.argv[0]
+	print(__doc__ % sys.argv[0])
 	sys.exit(1)
 	
 
@@ -52,7 +50,7 @@ sourcelist = glob.glob(source)
 sourcelist.sort()
 
 if not sourcelist:
-	print u"No files found matching '%s'." % source
+	print("No files found matching '%s'." % source)
 	sys.exit(1)
 
 for (s, t) in source_repl:
@@ -67,7 +65,7 @@ for s in sourcelist:
 	if m:
 		t = reFind.sub(target, s, 1)
 		if os.path.exists(t):
-			print u"%s -/-> %s : target exists" % (s, t)
+			print("%s -/-> %s : target exists" % (s, t))
 		else:
-			print u"%s ---> %s" % (s, t)
+			print("%s ---> %s" % (s, t))
 			os.rename(s, t)
