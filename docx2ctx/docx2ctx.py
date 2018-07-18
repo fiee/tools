@@ -103,13 +103,13 @@ class ContextHandler(handler.ContentHandler):
 		self.image = {} # current image
 		self.links = [] # list of external references incl. images
 		self.metadata = defaultdict(str)
-		
+
 		if self.options['colors'] is False:
 			del STYLE_MAP['color']
 			del STYLE_MAP['highlight']
 		if self.options['fonts'] is False:
 			del STYLE_MAP['rFonts']
-		
+
 	def startDocument(self):
 		self.metadata['language'] = self.metadata['language'].split('-')[0]
 		if self.options['template'] == 'empty':
@@ -129,7 +129,7 @@ class ContextHandler(handler.ContentHandler):
 			self.header += PREAMBLE
 		else:
 			self.header = ''
-		
+
 	def startElement(self, name, attrs):
 		self.elcount[name] += 1
 		self.allelements.add(name)
@@ -178,15 +178,15 @@ class ContextHandler(handler.ContentHandler):
 			except TypeError as ex:
 				logging.error(tag)
 				logging.exception(ex)
-	
+
 	def characters(self, content):
 		self.pText += texquote(content)
-	
+
 	def p(self, attrs):
 		self.pText = ''
 		self._pPr = defaultdict(constant_factory(False))
 		#self.text += '\n\\startparagraph\n'
-	
+
 	def p_end(self):
 		if not self.pText.strip():
 			return
@@ -231,7 +231,7 @@ class ContextHandler(handler.ContentHandler):
 			self.text += self.pText
 			self.text += '\n\\stopparagraph\n'
 		self._numPr = defaultdict(constant_factory(False))
-	
+
 	def r(self, attrs):
 		self._rPr = defaultdict(constant_factory(False))
 
@@ -249,13 +249,13 @@ class ContextHandler(handler.ContentHandler):
 			if key == 'baseline':
 				continue
 			self.pText += '}'
-	
+
 	def setStyle(self, name, val=True):
 		if 'w:pPr' in self.elhier:
 			self._pPr[name] = val
 		elif 'w:rPr' in self.elhier:
 			self._rPr[name] = val
-		
+
 	def vertAlign(self, attrs):
 		vA = attrs['w:val']
 		if vA == 'superscript':
@@ -267,24 +267,24 @@ class ContextHandler(handler.ContentHandler):
 	def tab(self, attrs):
 		pass
 		#self.pText += '\t'
-	
+
 	def br(self, attrs):
 		self.pText += '\\\\\n'
-	
+
 	def pStyle(self, attrs):
 		self._pPr['style'] = attrs['w:val']
-	
+
 	def ilvl(self, attrs):
 		self._numPr['ilvl'] = int(attrs['w:val'])
-	
+
 	def numId(self, attrs):
 		self._numPr['numId'] = int(attrs['w:val'])
-	
+
 	def noteReference(self, name, attrs):
 		if self.options[name+'s'] is False:
 			return
 		text = '??'
-		id = int(attrs['w:id'])
+		id = int(attrs['w:id']) - 1
 		try:
 			text = self.references[name][id]
 			logging.debug('%s %d = "%s"', name, id, text)
@@ -350,7 +350,7 @@ class ContextHandler(handler.ContentHandler):
 		tag += '_end'
 		if hasattr(self, tag):
 			getattr(self, tag)()
-	
+
 	def endDocument(self):
 		while self.section > 0:
 			# close all sections
@@ -367,7 +367,7 @@ class AuxReader(object):
 		Auxiliary Reader used by DOCReader
 		for processing footnotes, endnotes and comments.
 		Also uses ContextHandler
-		
+
 		zipf (zipfile.ZipFile): open DOCX file object
 		docname (str): file path within DOCX
 		"""
@@ -376,7 +376,7 @@ class AuxReader(object):
 		self.parser = make_parser()
 		self.handler = ContextHandler()
 		self.parser.setContentHandler(self.handler)
-		
+
 	def process(self):
 		self.parser.parse(self.zipf.open(self.docname))
 		return self.handler.references
@@ -386,7 +386,7 @@ class DOCReader(object):
 	def __init__(self, docx, **options):
 		"""
 		Read a DOCX file and return the text content as string
-		
+
 		docx (str): file path
 		options (dict):
 		  images (bool): extract images? (True)
@@ -411,7 +411,7 @@ class DOCReader(object):
 		self.parser = make_parser()
 		self.handler = options['handler'](**options)
 		self.parser.setContentHandler(self.handler)
-		
+
 	def process(self):
 		doc_xml = 'word/document.xml'
 		self.handler.metadata = self.process_metadata()
@@ -458,7 +458,7 @@ class DOCReader(object):
 			self.notes[name] = temp[name]
 		logging.debug(self.notes)
 		return self.notes
-		
+
 	def process_metadata(self):
 		meta_doc = 'docProps/core.xml'
 		if not meta_doc in self.filelist:
@@ -495,10 +495,11 @@ def postprocess(text, lang='en'):
 		text = re.sub(r'%s(.*?)%s' % (quotes[0], quotes[1]), r'\\quotation{\1}', text, flags=re.U|re.M)
 		text = re.sub(r'%s(.*?)%s' % (quotes[2], quotes[3]), r'\\quote{\1}', text, flags=re.U|re.M)
 	if lang == 'de':
-		text = re.sub(r'(\d+)\.(\d\d\d)', r'\1\\,\2', text) # Tausenderpunkte entfernen
+		text = re.sub(r'(\d+)\.(\d{3}\D)', r'\1\\,\2', text) # Tausenderpunkte entfernen
 		text = re.sub(r'(\d+)-(\d+)', r'\1–\2', text) # "bis"
 		text = re.sub(r'(\d+)\s*x\s*(\d+)', r'\1\\,\\times\\,\2', text) # Multiplikationskreuz
 		text = re.sub(r'(St|Dr|Prof)\.\s*(\w+)', r'\1.\\,\2', text, flags=re.U) # St, Dr, Prof
+		text = re.sub(r'(Nr)\.\s*(\d+)', r'\1.\\,\2', text, flags=re.U) # Nr
 		text = re.sub(r'(v|n)\.\s*(Chr\.)', r'\1.\\,\2', text, flags=re.U) # v./n. Chr.
 	elif lang == 'en':
 		text = re.sub(r'(\W)(BC|AD)(\W)', smallcaps, text) # AD/BC
@@ -549,7 +550,7 @@ def process_doc(docx, **options):
 @begin.start(auto_convert=True)
 @begin.logging
 def main(
-	template: 'TeX template file (without .tex)' = 'empty', # TODO
+	template: 'TeX template file (without .tex)' = 'empty',
 	templatedir: 'Directory for templates' = './tpl',
 	images: 'Extract embedded images?' = True,
 	imagedir: 'Directory for extracted images' = './img',
@@ -574,7 +575,7 @@ def main(
 				options['template'] = tplfile
 				logging.info('loading template %s', tplfile)
 			else:
-				logging.warn('Template %s is not a file. Continuing without template.', template)
+				logging.warn('template %s is not a file. Continuing without template.', template)
 	if not images:
 		imagedir = None
 	else:
