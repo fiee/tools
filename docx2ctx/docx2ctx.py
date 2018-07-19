@@ -8,11 +8,12 @@ License: chose one of BSD, MIT, GPL3+, LGPL
 import os
 from collections import defaultdict
 import re
+import shutil
 import logging
 import zipfile
+import argparse
 import xml.etree.ElementTree as ET
 from xml.sax import make_parser, handler
-# import begin # see http://begins.readthedocs.io/
 
 def constant_factory(value):
     return lambda: value
@@ -566,7 +567,10 @@ def process_doc(docx, options):
         # target file name is like source file name
         # TODO: use outputfile option
         targetfile = docx.lower().replace(' ', '_').replace('.docx', '.tex')
-        # TODO: check if target exists and save backup
+        if options.backup and os.path.isfile(targetfile):
+            backupfile = targetfile + '.bak'
+            logger.info('copying existing %s to %s', targetfile, backupfile)
+            shutil.copy2(targetfile, backupfile)
         with open(targetfile, 'w', encoding='utf-8-sig') as text:
             logger.info('writing %s', targetfile)
             text.write(result)
@@ -579,14 +583,13 @@ def process_doc(docx, options):
 if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     logging.basicConfig(format='%(levelname)s: %(message)s')
-    import argparse
     parser = argparse.ArgumentParser(description='''Convert from MS Word (docx) to ConTeXt (tex). \n2018 by fiëé visuëlle, Henning Hraban Ramm, www.fiee.net''')
     parser.add_argument('docs', help='source file(s) or directory (docx format)', nargs='+')
 
     # parser.add_argument('-c', '--config', help='configuration file, INI-Format')
     parser.add_argument('-o', '--outputfile', help='file name for output (<source name>.tex)')
-    parser.add_argument('-td', '--targetdir', help='directory name for output (source dir)')
-    parser.add_argument('-id', '--imagedir', help='directory name for extracted images (<targetdir>/img)', default='img')
+    parser.add_argument('-od', '--outputdir', help='directory name for output (source dir)')
+    parser.add_argument('-id', '--imagedir', help='directory name for extracted images (<outputdir>/img)', default='img')
 
     # project specific
     parser.add_argument('-td', '--templatedir', help='directory name for templates')
@@ -598,7 +601,7 @@ if __name__ == '__main__':
     #parser.add_argument('-ch', '--chapter', type=int, help='number of chapter', default=0)
 
     # switches
-    # parser.add_argument('-b', '--backup', action="store_true", help='backup existing target files')
+    parser.add_argument('-b', '--backup', action="store_true", help='backup existing target files')
     # parser.add_argument('-r', '--run', action="store_true", help='run ConTeXt on output file or product')
 
     parser.add_argument('-M', '--no-make-dirs', dest='make_dirs', action="store_false", help='Don’t create necessary directories')
