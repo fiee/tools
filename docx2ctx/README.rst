@@ -19,8 +19,6 @@ Dependencies
 
 * Python 3.5+ with standard library
 
-* begins (``pip3 install begins`` or ``pip3 install git+https://github.com/sh0oki/begins.git``)
-
 
 Features
 --------
@@ -44,27 +42,27 @@ Features
   * sub-/superscript: ``\low``/``\high``
   * underline: ``\underbar``
   * strikethrough: ``\overstrike``
-  
+
 * notes:
 
   * footnotes, endnotes: ``\footnote`` (reference starts with 'f' or 'e')
   * comments: ``\startcomment ... \stopcomment``
   * disable with ``--no-footnotes``, ``--no-endnotes``, ``--no-comments``
-  
+
 * enumerations: type (bullet/number) is ignored.
 
   * ``\start/stopitemize``, ``\start/stopitem``
-  
+
 * tables: using "natural tables"
 
   * ``\bTABLE \bTR \bTD ... \eTD \eTR \eTABLE``
   * No handling of table formats, cell spans etc.
-  
+
 * images: get extracted as files
 
   * ``\startplacefigure[...] \externalfigure[...] \stopplacefigure``
   * disable with ``--no-images``
-  
+
 * language switches:
 
   * Main language is taken from document metadata and setup as ``\mainlanguage[...]``.
@@ -79,7 +77,7 @@ Features
   * background color: ``\H...{}`` and ``\definehighlight[H...]``
     in preamble (fix yourself)
   * disable with ``--no-colors``
-  
+
 * fonts:
 
   * All fonts used in font switches are declared in preamble as
