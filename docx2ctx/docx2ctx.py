@@ -565,8 +565,13 @@ def process_doc(docx, options):
             # DATA['volume'] = 0
             result = template % DATA
         # target file name is like source file name
-        # TODO: use outputfile option
-        targetfile = docx.lower().replace(' ', '_').replace('.docx', '.tex')
+        if options.outputfile:
+            targetfile = options.outputfile + '.tex'
+        else:
+            targetfile = docx.lower().replace(' ', '_').replace('.docx', '.tex')
+        if options.outputdir:
+            path, targetfile = os.path.basename(targetfile)
+            targetfile = os.path.join(options.outputdir, targetfile)
         if options.backup and os.path.isfile(targetfile):
             backupfile = targetfile + '.bak'
             logger.info('copying existing %s to %s', targetfile, backupfile)
@@ -593,10 +598,11 @@ if __name__ == '__main__':
 
     # project specific
     parser.add_argument('-td', '--templatedir', help='directory name for templates')
-    parser.add_argument('-t', '--template', help='component template', default='empty')
+    parser.add_argument('-t', '--template', help='template name, becomes <templatedir>/<template>.tex', default='empty')
+
     parser.add_argument('-l', '--lang', help='override document main language')
     #parser.add_argument('-p', '--product', help='associated product of component')
-    parser.add_argument('-m', '--component', help='usually same as source')
+    parser.add_argument('-m', '--component', help='otherwise same as source file name')
     parser.add_argument('-n', '--volume', type=int, help='number of issue', default=0)
     #parser.add_argument('-ch', '--chapter', type=int, help='number of chapter', default=0)
 
@@ -659,7 +665,7 @@ if __name__ == '__main__':
             tplfile = os.path.join(args.templatedir, args.template+'.tex')
             if os.path.isfile(tplfile):
                 args.template = tplfile
-                logger.info('loading template %s', tplfile)
+                logger.info('using template %s', tplfile)
             else:
                 logger.warn('template %s not found or not a file, continuing without template', args.template)
                 args.template = 'empty'
@@ -673,5 +679,14 @@ if __name__ == '__main__':
                 os.makedirs(args.imagedir)
             else:
                 logger.warn('image directory %s does not exist', args.imagedir)
+
+    # output
+    if not os.path.isdir(args.outputdir):
+        if args.make_dirs:
+            logger.info('creating output directory %s', args.outputdir)
+            os.makedirs(args.outputdir)
+        else:
+            logger.warn('output directory %s does not exist', args.outputdir)
+
     for doc in args.docs:
         process_doc(doc, args)
