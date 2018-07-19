@@ -530,9 +530,10 @@ def process_doc(docx, options):
     Process one docx file or directory (recursively)
 
     docx (str): name/path of file or directory
-    options (argparse.Namespace): arguments object
+    options (`argparse.Namespace`): arguments object
 
     Returns True on success, False on error
+    (only for single files, makes not a lot of sense)
     """
     logger = options.logger
     logger.info('processing %s' % docx)
@@ -588,6 +589,7 @@ if __name__ == '__main__':
     parser.add_argument('-id', '--imagedir', help='directory name for extracted images (<targetdir>/img)', default='img')
 
     # project specific
+    parser.add_argument('-td', '--templatedir', help='directory name for templates')
     parser.add_argument('-t', '--template', help='component template', default='empty')
     parser.add_argument('-l', '--lang', help='override document main language')
     #parser.add_argument('-p', '--product', help='associated product of component')
@@ -596,9 +598,6 @@ if __name__ == '__main__':
     #parser.add_argument('-ch', '--chapter', type=int, help='number of chapter', default=0)
 
     # switches
-    #raw: 'Don\'t try to enhance markup?' = False,
-    # TODO: replace with project setup
-
     # parser.add_argument('-b', '--backup', action="store_true", help='backup existing target files')
     # parser.add_argument('-r', '--run', action="store_true", help='run ConTeXt on output file or product')
 
@@ -660,13 +659,14 @@ if __name__ == '__main__':
                 logger.info('loading template %s', tplfile)
             else:
                 logger.warn('template %s not found or not a file, continuing without template', args.template)
+                args.template = 'empty'
     # images
     if not args.images:
         args.imagedir = None
     else:
         if not os.path.isdir(args.imagedir):
             if args.make_dirs:
-                logger.info('creating image directory %s', args.templatedir)
+                logger.info('creating image directory %s', args.imagedir)
                 os.makedirs(args.imagedir)
             else:
                 logger.warn('image directory %s does not exist', args.imagedir)
