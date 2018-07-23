@@ -569,8 +569,9 @@ def process_doc(docx, options):
             targetfile = options.outputfile + '.tex'
         else:
             targetfile = docx.lower().replace(' ', '_').replace('.docx', '.tex')
+            options.outputfile = targetfile
         if options.outputdir:
-            path, targetfile = os.path.basename(targetfile)
+            targetfile = os.path.basename(targetfile)
             targetfile = os.path.join(options.outputdir, targetfile)
         if options.backup and os.path.isfile(targetfile):
             backupfile = targetfile + '.bak'
