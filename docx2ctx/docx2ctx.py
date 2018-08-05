@@ -8,7 +8,9 @@ License: chose one of BSD, MIT, GPL3+, LGPL
 import os
 from collections import defaultdict
 import re
+import sys
 import shutil
+import copy
 import logging
 import zipfile
 import argparse
@@ -110,17 +112,27 @@ class ContextHandler(handler.ContentHandler):
         self.prev_enum = 0 # enum level of previous par
         self.enum = 0 # enum level
         self.elhier = [] # element hierarchy
-        self.references = defaultdict(list)
+        self.references = defaultdict(dict)
         self.inRef = '' # we're within reference type ''
         self.image = {} # current image
         self.links = [] # list of external references incl. images
         self.metadata = defaultdict(str)
+        self.currentId = None
 
         if self.options['colors'] is False:
-            del STYLE_MAP['color']
-            del STYLE_MAP['highlight']
+            try:
+                del STYLE_MAP['color']
+            except:
+                pass
+            try:
+                del STYLE_MAP['highlight']
+            except:
+                pass
         if self.options['fonts'] is False:
-            del STYLE_MAP['rFonts']
+            try:
+                del STYLE_MAP['rFonts']
+            except:
+                pass
 
     def startDocument(self):
         self.metadata['language'] = self.metadata['language'].split('-')[0]
@@ -149,9 +161,10 @@ class ContextHandler(handler.ContentHandler):
         tag = name.replace('w:', '').replace(':', '_')
         if tag in ('footnote', 'endnote', 'comment'):
             if self.options[tag+'s'] is False:
+                # no footnotes/endnotes/comments?
                 return
-            #id = int(attrs['w:id'])
-            self.references[tag].append('')
+            self.currentId = int(attrs['w:id'])
+            self.references[tag][self.currentId] = ''
             self.inRef = tag
         elif tag in ('footnoteReference', 'endnoteReference', 'commentReference'):
             tag = tag.replace('Reference','')
@@ -165,8 +178,15 @@ class ContextHandler(handler.ContentHandler):
                     return
             elif 'w:ascii' in attrs: # fonts
                 val = attrs['w:ascii'].replace(' ', '')
+            else:
+                logging.debug('tag %s without val or ascii attribute', tag)
+                # e.g. rFonts with just w:eastAsia
+                val = None
             if tag == 'lang':
                 val, _ = val.split('-')
+                if val == self.options['lang']:
+                    # don't set default language
+                    return
             style = STYLE_MAP[tag]
             if type(style[1]) is str:
                 style[1] = val
@@ -179,7 +199,7 @@ class ContextHandler(handler.ContentHandler):
                     setup = '\\definehighlight[H%s][background=color,backgroundcolor=%s]\n' % (val, val)
                     if not setup in self.header:
                         self.header += setup
-            elif tag == 'rFonts':
+            elif tag == 'rFonts' and val:
                 setup = '\\definefont[F%s][%s*default]\n' % (val, val.lower())
                 if not setup in self.header:
                     self.header += setup
@@ -296,7 +316,7 @@ class ContextHandler(handler.ContentHandler):
         if self.options[name+'s'] is False:
             return
         text = '??'
-        id = int(attrs['w:id']) - 1
+        id = int(attrs['w:id'])
         try:
             text = self.references[name][id]
             logging.debug('%s %d = "%s"', name, id, text)
@@ -357,8 +377,9 @@ class ContextHandler(handler.ContentHandler):
             if self.options[tag+'s'] is False:
                 return
             logging.debug('registering %s in %s = "%s"', tag, self.references[tag], self.pText)
-            self.references[tag][-1] = self.pText
+            self.references[tag][self.currentId] = self.pText
             self.inRef = ''
+            self.currentId = None
         tag += '_end'
         if hasattr(self, tag):
             getattr(self, tag)()
@@ -415,6 +436,8 @@ class DOCReader(object):
         self.links = defaultdict(str)
         self.notes = defaultdict(str)
         self.meta = defaultdict(str)
+        self.meta['subject'] = ''
+        self.meta['title'] = self.docxfile.replace(' ', '_')
 
         # read file
         self.zipf = zipfile.ZipFile(self.docxfile)
@@ -482,6 +505,7 @@ class DOCReader(object):
             ns, key = node.tag.split('}')
             self.meta[key] = node.text or ''
         logging.debug(self.meta)
+        # TODO: process docProps/custom.xml
         return self.meta
 
 QUOTES = {
@@ -493,10 +517,14 @@ QUOTES = {
 }
 
 REPLACEMENTS = (
+    # simple replacements, no regexes
     ('...', '…'),
     ('--', '–'),
     ('---', '—'),
     ('\'s', '’s'),
+    (' }', '} '),
+    ('z.B.', 'z.\\,B.'),
+    ('u.a.', 'u.\\,a.'),
 )
 
 def smallcaps(matcho):
@@ -505,6 +533,16 @@ def smallcaps(matcho):
 def postprocess(text, lang='en'):
     for t in REPLACEMENTS:
         text = text.replace(t[0], t[1])
+    # concat emph runs
+    text = re.sub(r'\\(emph|strong)\{(.*?)\}(\s*)\\\1\{(.*?)\}',
+        r'\\\1{\2\3\4}', text, flags=re.U|re.M)
+    text = re.sub(r'\{(\\language\[(\w+)\])(.*?)\}(\s*)\{\1(.*?)\}',
+        r'{\1\3\4\5}', text, flags=re.U|re.M)
+    # remove empty emphs
+    text = re.sub(r'\\(emph|strong)\{(\s*)\}', r'\2', text, flags=re.U|re.M)
+    text = re.sub(r'\{\\language\[(\w+)\](\s*)\}', r'\2', text, flags=re.U|re.M)
+    # brackets at line start
+    text = re.sub(r'^\[', r'\\strut[', text)
     if lang in QUOTES:
         quotes = QUOTES[lang]
         text = re.sub(r'%s(.*?)%s' % (quotes[0], quotes[1]), r'\\quotation{\1}', text, flags=re.U|re.M)
@@ -545,6 +583,7 @@ def process_doc(docx, options):
         logger.info('%s is a directory', docx)
         for entry in os.scandir(docx):
             if not entry.name.startswith('.') and entry.is_file():
+                options.outputfile = ''
                 process_doc(entry.path, options)
     elif os.path.isfile(docx):
         logger.info('opening %s', docx)
@@ -571,6 +610,13 @@ def process_doc(docx, options):
             targetfile = docx.lower().replace(' ', '_').replace('.docx', '.tex')
             options.outputfile = targetfile
         if options.outputdir:
+            if not os.path.isdir(options.outputdir):
+                if options.make_dirs:
+                    logger.info('creating output directory %s', options.outputdir)
+                    os.makedirs(options.outputdir)
+                else:
+                    logger.warn('output directory %s does not exist', options.outputdir)
+                    options.outputdir = '.'
             targetfile = os.path.basename(targetfile)
             targetfile = os.path.join(options.outputdir, targetfile)
         if options.backup and os.path.isfile(targetfile):
@@ -583,6 +629,7 @@ def process_doc(docx, options):
     else:
         logger.warn('%s is not a file or directory!', docx)
         return False
+    logger.info('done.')
     return True
 
 
@@ -682,7 +729,7 @@ if __name__ == '__main__':
                 logger.warn('image directory %s does not exist', args.imagedir)
 
     # output
-    if not os.path.isdir(args.outputdir):
+    if args.outputdir and not os.path.isdir(args.outputdir):
         if args.make_dirs:
             logger.info('creating output directory %s', args.outputdir)
             os.makedirs(args.outputdir)
@@ -690,4 +737,4 @@ if __name__ == '__main__':
             logger.warn('output directory %s does not exist', args.outputdir)
 
     for doc in args.docs:
-        process_doc(doc, args)
+        process_doc(doc, copy.copy(args))
