@@ -1,9 +1,9 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <!DOCTYPE keyboard SYSTEM "file://localhost/System/Library/DTDs/KeyboardLayout.dtd">
 <!-- Sat, 1 Jan 2005 Generated from KCHR: "German" -->
-<!--Last edited by Ukelele version 3.2.7.195 on 2018-09-28 at 18:50 (MESZ)-->
+<!--Last edited by Ukelele version 3.2.7.195 on 2018-09-28 at 21:26 (MESZ)-->
 <!--Created by Ukelele version 2.2.4 on 2013-07-24 at 19:49 (GMT+06:00)-->
-<keyboard group="126" id="-24229" name="Deutsch Europa" maxout="1">
+<keyboard group="126" id="-13596" name="Deutsch Europa" maxout="1">
 	<layouts>
 		<layout first="0" last="4" mapSet="ANSI" modifiers="commonModifiers"/>
 		<layout first="5" last="5" mapSet="JIS" modifiers="commonModifiers"/>
@@ -2520,7 +2520,7 @@
 			<when state="Zirkumflex ^" output="ĵ"/>
 		</action>
 		<action id="k">
-			<when state="none" next="Kyrillisch а"/>
+			<when state="none" output="k"/>
 			<when state="Akut ´" output="ḱ"/>
 			<when state="Braille" output="⠅"/>
 			<when state="Cedille ¸" output="ķ"/>
@@ -2544,7 +2544,7 @@
 			<when state="Tilde ~" output="ɫ"/>
 		</action>
 		<action id="m">
-			<when state="none" next="Math"/>
+			<when state="none" output="m"/>
 			<when state="Akut ´" output="ḿ"/>
 			<when state="Braille" output="⠍"/>
 			<when state="Griechisch α" output="μ"/>
@@ -2817,7 +2817,7 @@
 			<when state="Griechisch α" next="Griechisch Tonos ά"/>
 		</action>
 		<action id="µ">
-			<when state="none" output="µ"/>
+			<when state="none" next="Math"/>
 			<when state="Punkt-Akzent ˙" output="ṃ"/>
 		</action>
 		<action id="¶">
@@ -3156,7 +3156,7 @@
 			<when state="Punkt-Akzent ˙" output="ḍ"/>
 		</action>
 		<action id="∆">
-			<when state="none" output="∆"/>
+			<when state="none" next="Kyrillisch а"/>
 			<when state="Ogonek ˛" output="ƙ"/>
 			<when state="Punkt-Akzent ˙" output="ḳ"/>
 		</action>
