@@ -1,7 +1,7 @@
 Tastaturlayout „Deutsch-Europa“
 ===============================
 
-@ 2008-2018 Henning Hraban Ramm, fiëé visuëlle <hraban@fiee.net>
+© 2008-2018 Henning Hraban Ramm, fiëé visuëlle <hraban@fiee.net>
 Lizenz: http://creativecommons.org/licenses/by-sa/3.0/de/
 
 erstellt mit Ukelele: http://scripts.sil.org/Ukelele
@@ -17,7 +17,13 @@ Umfang
 Installation
 ------------
 
-Lege das Bundle (welches Tastaturlayout und Icons enthält) in „[/Users/user]/Library/Keyboard Layouts“; spätestens nach einem Neustart steht die neue Tastaturbelegung zur Verfügung und kann in „Systemeinstellungen/Landeseinstellungen/Tastaturmenü“ aktiviert werden.
+Lege das Bundle (welches Tastaturlayout und Icons enthält) in „[/Users/user]/Library/Keyboard Layouts“; öffne Systemeinstellungen /
+Tastatur / Eingabequellen; klicke auf „+“; unter „Deutsch“ oder „Andere“
+kannst du nun „Deutsch Europa“ auswählen und „Hinzufügen“.
+Dann ist die neue Belegung im Tastaturmenü verfügbar.
+
+Achtung, manche Programme fangen die zusätzlichen Dead Keys ab oder haben
+die Tastaturkombinationen anders belegt.
 
 
 Beschreibung

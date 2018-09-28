@@ -1,7 +1,7 @@
 OSX Keyboard layouts
 ====================
 
-@ 2008-2018 Henning Hraban Ramm, fiëé visuëlle <hraban@fiee.net>
+© 2008-2018 Henning Hraban Ramm, fiëé visuëlle <hraban@fiee.net>
 
 
 License
@@ -36,5 +36,7 @@ Unzip the archive. But the "bundle" file (actually a directory tree) into
 
 Restart (or at least log off and on again).
 
-Now you can activate the new keyboard layout(s) in
-`system settings / international / keyboard` (or similar)
+Open `system settings / keyboard / input sources` (or similar);
+click `+`; select `German / Deutsch Europa` for the bundle or
+`Other / Deutsch Europa` for the pure keylayout. The difference is
+just the icon.
