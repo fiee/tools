@@ -2,9 +2,11 @@ Tastaturlayout „Deutsch-Europa“
 ===============================
 
 © 2008-2018 Henning Hraban Ramm, fiëé visuëlle <hraban@fiee.net>
+
 Lizenz: http://creativecommons.org/licenses/by-sa/3.0/de/
 
 erstellt mit Ukelele: http://scripts.sil.org/Ukelele
+
 
 Umfang
 ------
@@ -42,26 +44,32 @@ Vieles ist reine Spielerei (Dingbats), anderes ist unvollständig (polytonisches
 
 Dead Keys: Akzent-Tasten
 ------------------------
-^ Zirkumflex (â), mit Alt: Karon (ǎ)
-° Ring-Akzent (å), sowie eingekreiste Zeichen (©, ➀, ⊕)
-´ Akut (á)
-˝ Akut-Akut = ungarischer Umlaut (ű)
-` Gravis (à)
-̏ Gravis-Gravis (ȁ)
+
+* ^ Zirkumflex (â), mit Alt: Karon (ǎ)
+* ° Ring-Akzent (å), sowie eingekreiste Zeichen (©, ➀, ⊕)
+* ´ Akut (á)
+* ˝ Akut-Akut = ungarischer Umlaut (ű)
+* ` Gravis (à)
+* ̏ Gravis-Gravis (ȁ)
+
 
 Dead Keys: Alt-Buchstabe
 ------------------------
-u ¨ Trema/Diärese/Umlaut (ä)
-i ˙ Punkt (ȧ)
-o - „durchgestrichen“ (ł)
-p ➔ Pfeile
-g α griechisch (mit zusätzlichen Akzenten: polytonisches Griechisch)
-k а kyrillisch
-c ¸ Cedille/Haken rückwärts (ş)
-n ~ Tilde (ã)
 
-Shift-Alt:
-B ⠀ Blindenschrift/Braille (⠁)
-C   Ogonek/Haken vorwärts
-P ➔ schräge Pfeile (☜)
-6 ^ wie Zirkumflex
+* u ¨ Trema/Diärese/Umlaut (ä)
+* i ˙ Punkt (ȧ)
+* o - „durchgestrichen“ (ł)
+* p ➔ Pfeile
+* g α griechisch (mit zusätzlichen Akzenten: polytonisches Griechisch)
+* k а kyrillisch
+* c ¸ Cedille/Haken rückwärts (ş)
+* n ~ Tilde (ã)
+
+
+Dead Keys: Shift-Alt-Buchstabe
+------------------------------
+
+* B ⠀ Blindenschrift/Braille (⠁)
+* C   Ogonek/Haken vorwärts
+* P ➔ schräge Pfeile (☜)
+* 6 ^ wie Zirkumflex
