@@ -329,7 +329,7 @@ class ContextHandler(handler.ContentHandler):
             self.pText += '\\footnote[%s:%d]{%s}' % (name[0], id, text)
 
     def a_graphic(self, attrs):
-        self.image = {'filename':''} # new image
+        self.image = defaultdict(str) # new image
 
     def a_blip(self, attrs):
         id = attrs['r:embed']
