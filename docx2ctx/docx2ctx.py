@@ -473,7 +473,7 @@ class DOCReader(object):
     def process_links(self):
         link_doc = 'word/_rels/document.xml.rels'
         if not link_doc in self.filelist:
-            logging.warn('no links found')
+            logging.warning('no links found')
             return self.links
         doc = self.zipf.read(link_doc)
         root = ET.fromstring(doc)
@@ -486,7 +486,7 @@ class DOCReader(object):
         for name in ('footnote', 'endnote', 'comment'):
             aux_doc = 'word/%ss.xml' % name
             if not aux_doc in self.filelist or self.options[name+'s'] is False:
-                logging.warn('no %ss', name)
+                logging.warning('no %ss', name)
                 continue
             obj = AuxReader(self.zipf, aux_doc)
             temp = obj.process()
@@ -497,7 +497,7 @@ class DOCReader(object):
     def process_metadata(self):
         meta_doc = 'docProps/core.xml'
         if not meta_doc in self.filelist:
-            logging.warn('Metadata file not found!')
+            logging.warning('Metadata file not found!')
             return self.meta
         doc = self.zipf.read(meta_doc)
         root = ET.fromstring(doc)
@@ -577,7 +577,7 @@ def process_doc(docx, options):
     logger = options.logger
     logger.info('processing %s' % docx)
     if os.path.basename(docx).startswith('.'):
-        logger.warn('ignoring hidden file/dir %s', docx)
+        logger.warning('ignoring hidden file/dir %s', docx)
         return False
     if os.path.isdir(docx):
         logger.info('%s is a directory', docx)
@@ -615,7 +615,7 @@ def process_doc(docx, options):
                     logger.info('creating output directory %s', options.outputdir)
                     os.makedirs(options.outputdir)
                 else:
-                    logger.warn('output directory %s does not exist', options.outputdir)
+                    logger.warning('output directory %s does not exist', options.outputdir)
                     options.outputdir = '.'
             targetfile = os.path.basename(targetfile)
             targetfile = os.path.join(options.outputdir, targetfile)
@@ -627,7 +627,7 @@ def process_doc(docx, options):
             logger.info('writing %s', targetfile)
             text.write(result)
     else:
-        logger.warn('%s is not a file or directory!', docx)
+        logger.warning('%s is not a file or directory!', docx)
         return False
     logger.info('done.')
     return True
@@ -708,14 +708,14 @@ if __name__ == '__main__':
                 logger.info('creating template directory %s', args.templatedir)
                 os.makedirs(args.templatedir)
             else:
-                logger.warn('template directory %s does not exist', args.templatedir)
+                logger.warning('template directory %s does not exist', args.templatedir)
         if not os.path.isfile(args.template):
             tplfile = os.path.join(args.templatedir, args.template+'.tex')
             if os.path.isfile(tplfile):
                 args.template = tplfile
                 logger.info('using template %s', tplfile)
             else:
-                logger.warn('template %s not found or not a file, continuing without template', args.template)
+                logger.warning('template %s not found or not a file, continuing without template', args.template)
                 args.template = 'empty'
     # images
     if not args.images:
@@ -726,7 +726,7 @@ if __name__ == '__main__':
                 logger.info('creating image directory %s', args.imagedir)
                 os.makedirs(args.imagedir)
             else:
-                logger.warn('image directory %s does not exist', args.imagedir)
+                logger.warning('image directory %s does not exist', args.imagedir)
 
     # output
     if args.outputdir and not os.path.isdir(args.outputdir):
@@ -734,7 +734,7 @@ if __name__ == '__main__':
             logger.info('creating output directory %s', args.outputdir)
             os.makedirs(args.outputdir)
         else:
-            logger.warn('output directory %s does not exist', args.outputdir)
+            logger.warning('output directory %s does not exist', args.outputdir)
 
     for doc in args.docs:
         process_doc(doc, copy.copy(args))
