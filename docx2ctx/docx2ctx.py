@@ -536,7 +536,13 @@ def smallcaps(matcho):
 def postprocess(text, lang='en'):
     for t in REPLACEMENTS:
         text = text.replace(t[0], t[1])
-    # concat emph runs
+    # internal note reference, couldn’t catch w:instrText??
+    text = re.sub(r'NOTEREF\s+_Ref\d+\s+\\h\s+\\\*\s+MERGEFORMAT', r'\\note[]', text, flags=re.M)
+    # concat emph runs (once is not enough, twice mostly is)
+    text = re.sub(r'\\(emph|strong)\{(.*?)\}(\s*)\\\1\{(.*?)\}',
+        r'\\\1{\2\3\4}', text, flags=re.U|re.M)
+    text = re.sub(r'\{(\\language\[(\w+)\])(.*?)\}(\s*)\{\1(.*?)\}',
+        r'{\1\3\4\5}', text, flags=re.U|re.M)
     text = re.sub(r'\\(emph|strong)\{(.*?)\}(\s*)\\\1\{(.*?)\}',
         r'\\\1{\2\3\4}', text, flags=re.U|re.M)
     text = re.sub(r'\{(\\language\[(\w+)\])(.*?)\}(\s*)\{\1(.*?)\}',
@@ -544,6 +550,8 @@ def postprocess(text, lang='en'):
     # remove empty emphs
     text = re.sub(r'\\(emph|strong)\{(\s*)\}', r'\2', text, flags=re.U|re.M)
     text = re.sub(r'\{\\language\[(\w+)\](\s*)\}', r'\2', text, flags=re.U|re.M)
+    # remove spaces at begin of notes
+    text = re.sub(r'\\(footnote|endnote|comment)(\[.*?\])?\{\s+', r'\\\1\2{', text)
     # brackets at line start
     text = re.sub(r'^\[', r'\\strut[', text)
     if lang in QUOTES:
