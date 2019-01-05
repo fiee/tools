@@ -93,6 +93,7 @@ QUOTABLES = '{}$&%'
 def texquote(text):
     for c in QUOTABLES:
         text = text.replace(c, '\\'+c)
+        text = text.replace('\\%s ' % c, '\\%s\\ ' % c)
     return text
 
 
@@ -148,7 +149,8 @@ class ContextHandler(handler.ContentHandler):
                 '\tauthor={%(creator)s},\n' + \
                 '\tdescription={%(description)s},\n' + \
                 '\t]\n' + \
-                '\\mainlanguage[%(language)s]\n'
+                '\\mainlanguage[%(language)s]\n' + \
+                '\\language[%(language)s]\n'
             self.header = self.header % self.metadata
             self.header += PREAMBLE
         else:
@@ -182,6 +184,7 @@ class ContextHandler(handler.ContentHandler):
                 logging.debug('tag %s without val or ascii attribute', tag)
                 # e.g. rFonts with just w:eastAsia
                 val = None
+                return
             if tag == 'lang':
                 val, _ = val.split('-')
                 if val == self.options['lang']:
