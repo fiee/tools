@@ -174,12 +174,16 @@ class ContextHandler(handler.ContentHandler):
                 return
             self.noteReference(tag, attrs)
         elif tag in STYLE_MAP:
+            style = STYLE_MAP[tag]
             if 'w:val' in attrs:
                 val = attrs['w:val']
                 if val in ('false', 'auto', 'none'):
                     return
             elif 'w:ascii' in attrs: # fonts
                 val = attrs['w:ascii'].replace(' ', '')
+            elif not type(style[1]) is str:
+                # e.g. <w:i/>
+                val = ''
             else:
                 logging.debug('tag %s without val or ascii attribute', tag)
                 # e.g. rFonts with just w:eastAsia
@@ -190,7 +194,6 @@ class ContextHandler(handler.ContentHandler):
                 if val == self.options['lang']:
                     # don't set default language
                     return
-            style = STYLE_MAP[tag]
             if type(style[1]) is str:
                 style[1] = val
             self.setStyle(tag, style[1])
@@ -585,19 +588,18 @@ def process_doc(docx, options):
     Returns True on success, False on error
     (only for single files, makes not a lot of sense)
     """
-    logger = options.logger
-    logger.info('processing %s' % docx)
+    logging.info('processing %s' % docx)
     if os.path.basename(docx).startswith('.'):
-        logger.warning('ignoring hidden file/dir %s', docx)
+        logging.warning('ignoring hidden file/dir %s', docx)
         return False
     if os.path.isdir(docx):
-        logger.info('%s is a directory', docx)
+        logging.info('%s is a directory', docx)
         for entry in os.scandir(docx):
             if not entry.name.startswith('.') and entry.is_file():
                 options.outputfile = ''
                 process_doc(entry.path, options)
     elif os.path.isfile(docx):
-        logger.info('opening %s', docx)
+        logging.info('opening %s', docx)
         obj = DOCReader(docx, **vars(options))
         result = obj.process()
         lang = obj.meta['language'] or DEFAULT_LANGUAGE
@@ -605,7 +607,7 @@ def process_doc(docx, options):
             result = postprocess(result, lang)
         template = '%(TEXT)s'
         if options.template != 'empty':
-            logger.info('processing template')
+            logging.info('processing template')
             with open(options.template, 'r', encoding='utf-8') as tpl:
                 template = ''.join(tpl.readlines())
             DATA = vars(options) # dict from arguments
@@ -623,30 +625,28 @@ def process_doc(docx, options):
         if options.outputdir:
             if not os.path.isdir(options.outputdir):
                 if options.make_dirs:
-                    logger.info('creating output directory %s', options.outputdir)
+                    logging.info('creating output directory %s', options.outputdir)
                     os.makedirs(options.outputdir)
                 else:
-                    logger.warning('output directory %s does not exist', options.outputdir)
+                    logging.warning('output directory %s does not exist', options.outputdir)
                     options.outputdir = '.'
             targetfile = os.path.basename(targetfile)
             targetfile = os.path.join(options.outputdir, targetfile)
         if options.backup and os.path.isfile(targetfile):
             backupfile = targetfile + '.bak'
-            logger.info('copying existing %s to %s', targetfile, backupfile)
+            logging.info('copying existing %s to %s', targetfile, backupfile)
             shutil.copy2(targetfile, backupfile)
         with open(targetfile, 'w', encoding='utf-8-sig') as text:
-            logger.info('writing %s', targetfile)
+            logging.info('writing %s', targetfile)
             text.write(result)
     else:
-        logger.warning('%s is not a file or directory!', docx)
+        logging.warning('%s is not a file or directory!', docx)
         return False
-    logger.info('done.')
+    logging.info('done.')
     return True
 
 
 if __name__ == '__main__':
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(format='%(levelname)s: %(message)s')
     parser = argparse.ArgumentParser(description='''Convert from MS Word (docx) to ConTeXt (tex). \n2018 by fiëé visuëlle, Henning Hraban Ramm, www.fiee.net''')
     parser.add_argument('docs', help='source file(s) or directory (docx format)', nargs='+')
 
@@ -704,29 +704,33 @@ if __name__ == '__main__':
     if args.quiet:
         args.loglevel = 'critical'
         args.logfile = None
-    logger.setLevel(LOGLEVELS[args.loglevel.lower()])
     if args.logfile:
-        logger.basicConfig(
+        logging.basicConfig(
             format='%(asctime)s\t%(levelname)s\t%(message)s',
-            filename=args.logfile
+            filename=args.logfile,
+            level=LOGLEVELS[args.loglevel.lower()]
             )
-    args.logger = logger
+    else:
+        logging.basicConfig(
+            format='%(levelname)s: %(message)s',
+            level=LOGLEVELS[args.loglevel.lower()]
+            )
 
     # template
     if args.template != 'empty':
         if not os.path.isdir(args.templatedir):
             if args.make_dirs:
-                logger.info('creating template directory %s', args.templatedir)
+                logging.info('creating template directory %s', args.templatedir)
                 os.makedirs(args.templatedir)
             else:
-                logger.warning('template directory %s does not exist', args.templatedir)
+                logging.warning('template directory %s does not exist', args.templatedir)
         if not os.path.isfile(args.template):
             tplfile = os.path.join(args.templatedir, args.template+'.tex')
             if os.path.isfile(tplfile):
                 args.template = tplfile
-                logger.info('using template %s', tplfile)
+                logging.info('using template %s', tplfile)
             else:
-                logger.warning('template %s not found or not a file, continuing without template', args.template)
+                logging.warning('template %s not found or not a file, continuing without template', args.template)
                 args.template = 'empty'
     # images
     if not args.images:
@@ -734,18 +738,18 @@ if __name__ == '__main__':
     else:
         if not os.path.isdir(args.imagedir):
             if args.make_dirs:
-                logger.info('creating image directory %s', args.imagedir)
+                logging.info('creating image directory %s', args.imagedir)
                 os.makedirs(args.imagedir)
             else:
-                logger.warning('image directory %s does not exist', args.imagedir)
+                logging.warning('image directory %s does not exist', args.imagedir)
 
     # output
     if args.outputdir and not os.path.isdir(args.outputdir):
         if args.make_dirs:
-            logger.info('creating output directory %s', args.outputdir)
+            logging.info('creating output directory %s', args.outputdir)
             os.makedirs(args.outputdir)
         else:
-            logger.warning('output directory %s does not exist', args.outputdir)
+            logging.warning('output directory %s does not exist', args.outputdir)
 
     for doc in args.docs:
         process_doc(doc, copy.copy(args))
