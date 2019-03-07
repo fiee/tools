@@ -107,6 +107,7 @@ class ContextHandler(handler.ContentHandler):
         self.text = '' # complete text
         self.section = 0 # section level
         self.pText = '' # paragraph text
+        self.nText = '' # note text, maybe several paragraphs
         self._pPr = defaultdict(constant_factory(False)) # paragraph formatting
         self._rPr = defaultdict(constant_factory(False)) # textrun formatting
         self._numPr = defaultdict(constant_factory(False)) # enumeration
@@ -162,6 +163,7 @@ class ContextHandler(handler.ContentHandler):
         self.elhier.append(name)
         tag = name.replace('w:', '').replace(':', '_')
         if tag in ('footnote', 'endnote', 'comment'):
+            self.nText = '' # reset
             if self.options[tag+'s'] is False:
                 # no footnotes/endnotes/comments?
                 return
@@ -221,6 +223,7 @@ class ContextHandler(handler.ContentHandler):
         self.pText += texquote(content)
 
     def p(self, attrs):
+        self.nText += self.pText
         self.pText = ''
         self._pPr = defaultdict(constant_factory(False))
         #self.text += '\n\\startparagraph\n'
@@ -382,8 +385,8 @@ class ContextHandler(handler.ContentHandler):
         if tag in ('footnote', 'endnote', 'comment'):
             if self.options[tag+'s'] is False:
                 return
-            logging.debug('registering %s %d = "%s"', tag, self.currentId, self.pText)
-            self.references[tag][self.currentId] = self.pText
+            logging.debug('registering %s %d = "%s"', tag, self.currentId, self.nText)
+            self.references[tag][self.currentId] = self.nText
             self.inRef = ''
             self.currentId = None
         tag += '_end'
