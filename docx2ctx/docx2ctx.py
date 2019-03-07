@@ -88,7 +88,7 @@ PREAMBLE = """
 \\definehighlight[scaps][style=\\sc]
 """
 
-QUOTABLES = '{}$&%'
+QUOTABLES = '{}$%'
 
 def texquote(text):
     for c in QUOTABLES:
@@ -382,7 +382,7 @@ class ContextHandler(handler.ContentHandler):
         if tag in ('footnote', 'endnote', 'comment'):
             if self.options[tag+'s'] is False:
                 return
-            logging.debug('registering %s in %s = "%s"', tag, self.references[tag], self.pText)
+            logging.debug('registering %s %d = "%s"', tag, self.currentId, self.pText)
             self.references[tag][self.currentId] = self.pText
             self.inRef = ''
             self.currentId = None
