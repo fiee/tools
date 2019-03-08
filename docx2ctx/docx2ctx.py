@@ -170,6 +170,7 @@ class ContextHandler(handler.ContentHandler):
             self.currentId = int(attrs['w:id'])
             self.references[tag][self.currentId] = ''
             self.inRef = tag
+            logging.debug('found %s %d', tag, self.currentId)
         elif tag in ('footnoteReference', 'endnoteReference', 'commentReference'):
             tag = tag.replace('Reference','')
             if self.options[tag+'s'] is False:
@@ -223,7 +224,6 @@ class ContextHandler(handler.ContentHandler):
         self.pText += texquote(content)
 
     def p(self, attrs):
-        self.nText += self.pText
         self.pText = ''
         self._pPr = defaultdict(constant_factory(False))
         #self.text += '\n\\startparagraph\n'
@@ -272,6 +272,7 @@ class ContextHandler(handler.ContentHandler):
             self.text += self.pText
             self.text += '\n\\stopparagraph\n'
         self._numPr = defaultdict(constant_factory(False))
+        self.nText += self.pText
 
     def r(self, attrs):
         self._rPr = defaultdict(constant_factory(False))
@@ -384,6 +385,7 @@ class ContextHandler(handler.ContentHandler):
         tag = name.replace('w:', '').replace(':', '_')
         if tag in ('footnote', 'endnote', 'comment'):
             if self.options[tag+'s'] is False:
+                logging.debug('ignoring %s %d', tag, self.currentId)
                 return
             logging.debug('registering %s %d = "%s"', tag, self.currentId, self.nText)
             self.references[tag][self.currentId] = self.nText
