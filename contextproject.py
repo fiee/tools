@@ -29,7 +29,7 @@ def change_parent(options):
     insert call for current level into parent level file,
     e.g. `\component c_myfile` into `prd_myprod.tex`.
     """
-    original = open(options.parentfile, 'rU')
+    original = open(options.parentfile, 'r')
     lines = original.readlines()
     original.close()
     shutil.copy(options.parentfile, options.parentfile.replace(TeXSuffix, BackupSuffix))
@@ -78,7 +78,7 @@ def make_file(options):
         print('Template file "%s" not found (will proceed without template)' % options.templatefile)
         lines = ()
     else:
-        template = open(options.templatefile, 'rU')
+        template = open(options.templatefile, 'r')
         lines = template.readlines()
         template.close()
     if os.path.isfile(newfilename):
