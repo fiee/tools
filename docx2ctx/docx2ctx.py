@@ -448,6 +448,7 @@ class DOCReader(object):
         self.notes = defaultdict(str)
         self.meta = defaultdict(str)
         self.meta['subject'] = ''
+        self.meta['creator'] = ''
         self.meta['title'] = self.docxfile.replace(' ', '_')
 
         # read file
