@@ -83,8 +83,8 @@ STYLE_MAP = {
 }
 
 PREAMBLE = """
-\\definehighlight[emph][style=italic]
-\\definehighlight[strong][style=bold]
+\\definehighlight[emph][style=italicface]
+\\definehighlight[strong][style=boldface]
 \\definehighlight[scaps][style=\\sc]
 """
 
