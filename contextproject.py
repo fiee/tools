@@ -1,14 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from __future__ import unicode_literals
 """ConTeXt project management
 
-(c) 2009-2017 by Henning Hraban Ramm, fiëé visuëlle
+(c) 2009-2019 by Henning Hraban Ramm, fiëé visuëlle
 
 """
 # after Perl predecessor from 2002
-version = '%prog 2017-03-12'
+version = '%prog 2019-01-07'
 
 import os
 import re
