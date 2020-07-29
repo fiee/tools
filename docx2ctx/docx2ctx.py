@@ -193,7 +193,8 @@ class ContextHandler(handler.ContentHandler):
                 val = None
                 return
             if tag == 'lang':
-                val, _ = val.split('-')
+                if '-' in val:
+                    val, _ = val.split('-')
                 if val == self.options['lang']:
                     # don't set default language
                     return
