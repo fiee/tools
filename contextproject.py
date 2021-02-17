@@ -25,7 +25,7 @@ LOG_MAP = {
 }
 
 levels = ('environment', 'project', 'product', 'component')
-prefixes = ('env_', 'project_', 'prd_', 'c_')
+prefixes = ('env_', 'project_', 'prd_', '')
 
 reProject = re.compile(r'^\s*\\project\s+(?P<name>\w+)')
 reEnvironment = re.compile(r'^\s*\\environment\s+(?P<name>\w+)')
@@ -49,7 +49,7 @@ def change_parent(options, logger):
         thisName = '%s%s' % (prefixes[options.thislevel], options.this)
     component_directory = Path(options.component_directory).resolve()
     if component_directory != Path.cwd():
-        thisName = component_directory / thisName
+        thisName = component_directory.name +'/'+ thisName
     reIncluded = re.compile(r'^s*\\%s\s+(%s)' % (options.mode, thisName))
     alreadyIncluded = False
     lc = -1 # line count
@@ -98,10 +98,10 @@ def make_file(options, logger):
         lines = template.readlines()
         template.close()
     if os.path.isfile(newfilename):
-        logger.info('File "%s" exists, saving backup' % newfilename)
-        shutil.copy(newfilename, newfilename.replace(options.texsuffix, options.baksuffix))
+        logger.info('File "%s" exists, saving backup', newfilename)
+        shutil.copy(newfilename, str(newfilename).replace(options.texsuffix, options.baksuffix))
     newfile = open(newfilename, 'w')
-    newfile.write('\\start%s %s%s\n' % (options.mode, prefixes[options.thislevel], options.this))
+    newfile.write('\\start%s *\n' % (options.mode)) #, prefixes[options.thislevel], options.this))
     if options.mode=='project':
         newfile.write('\\environment %s%s\n' % (prefixes[0], options.environment))
     else:
@@ -212,8 +212,8 @@ def main():
                             errors = True
                             logger.error('file "%s" not found' % options.parentfile)
                             options.thislevel = options.parentlevel
-                            options.mode = levels[i+1] #levels[options.mode]
-                            make_file(options)
+                            options.mode = levels[i-1] #levels[options.mode]
+                            make_file(options, logger)
 
 
     ### stop on errors
