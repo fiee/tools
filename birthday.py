@@ -18,7 +18,7 @@ ZODIAC = (
 	('22.12.', '20.01.', 'Steinbock', 'fleißig, ehrgeizig, verantwortungsbewusst, geduldig, langweilig, spießig'),
 )
 
-# Erdzweigeself. (Jahreszahl + 9) % 12
+# Erdzweige. (Jahreszahl + 9) % 12
 CHINESE = (
     ('Ratte', 'gesellig, aktiv, aggressiv'), # 2008
     ('Büffel', 'ruhig, besonnen'),
@@ -133,6 +133,9 @@ NEWYEAR = {
 	2017: ('Hahn', '2017-01-28'),
 	2018: ('Hund', '2018-02-16'),
 	2019: ('Schwein', '2019-02-05'),
+	2020: ('Ratte', '2020-01-25'),
+	2021: ('Büffel', '2021-02-12'),
+	2022: ('Tiger', '2022-02-01'),
 }
 
 def zodiacsign(birthday):
