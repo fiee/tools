@@ -1,9 +1,9 @@
-﻿#!/usr/bin/env python
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Convert from MS Word DOCX to ConTeXt source
-(c) 2018 fiëé visuëlle, Henning Hraban Ramm
-License: chose one of BSD, MIT, GPL3+, LGPL
+(c) 2018–2021 fiëé visuëlle, Henning Hraban Ramm
+License: choose one of BSD, MIT, GPL3+, LGPL
 """
 import os
 from collections import defaultdict
@@ -32,7 +32,7 @@ LOGLEVELS = {
 
 DEFAULT_LANGUAGE = 'de' # TODO: check locale
 
-SECTIONS = 'paragraph chapter section subsection subsubsection subsubsubsection'.split()
+SECTIONS = 'paragraph chapter section subsection subsubsection subsubsubsection subsubsubsubsection'.split()
 
 SECTION_MAP = { # Style name to section level
     # The internal name may differ from the visible name,
@@ -141,7 +141,7 @@ class ContextHandler(handler.ContentHandler):
         if self.options['template'] == 'empty':
             if self.doctype == 'component':
                 name = self.metadata['title'].replace(' ', '_')
-                self.header = '\\startcomponent c_%s\n' % name
+                self.header = '\\startcomponent %s\n' % name
                 self.header += '\\product prd_\n\\project prj_\n'
             self.header += '\n\\setupinteraction[\n' + \
                 '\ttitle={%(title)s},\n' + \
@@ -231,18 +231,21 @@ class ContextHandler(handler.ContentHandler):
 
     def p_end(self):
         if not self.pText.strip():
+            # empty paragraph
             return
         style = self._pPr['style'] or ''
         if self._pPr['b']: # whole paragraph is bold: probably a title
+            # stop previous section
             if self.section > 0:
                 self.text += '\n\\stop%s\n' % SECTIONS[self.section]
+            # start new section
             if self.section < 2:
                 self.section += 1
-            #self.pText = self.pText.replace('\\strong', '')
             self.pText = re.sub(r'\\strong\{(.*?)\}', r'\1', self.pText)
             self.text += '\n\\start%s[title={%s}]\n' % (SECTIONS[self.section], self.pText)
         elif style in SECTION_MAP: # it's a title style
             if self.prev_enum:
+                # stop itemize
                 self.text += '\\stopitemize\n'
                 self.prev_enum = 0
                 self.enum = 0
@@ -251,10 +254,12 @@ class ContextHandler(handler.ContentHandler):
             if self.section >= cur_sec_id:
                 # close previous section
                 self.text += '\n\\stop%s\n' % SECTIONS[self.section]
+                # TODO: also close parent section if necessary
             self.section = cur_sec_id
             self.text += '\n\\start%s[title={%s}]\n\n' % (cur_sec, self.pText)
         elif self._numPr['numId'] and int(self._numPr['numId']) > 1:
             if not self.prev_enum or self.prev_enum < self.enum:
+                # new itemize
                 self.enum += 1
                 self.text += '\\startitemize[]\n'
             self.text += '\\startitem %% %s, %d, %d\n' % (style, self._numPr['numId'], self._numPr['ilvl'])
@@ -375,7 +380,7 @@ class ContextHandler(handler.ContentHandler):
         self.text += '\\eTR\n'
 
     def tc(self, attrs):
-        self.text += '\n\\bTD '
+        self.text += '\\bTD '
 
     def tc_end(self):
         self.text += '\\eTD'
@@ -407,7 +412,7 @@ class ContextHandler(handler.ContentHandler):
 
 
 class AuxReader(object):
-    def __init__(self, zipf, docname):
+    def __init__(self, zipf, docname, **options):
         """
         Auxiliary Reader used by DOCReader
         for processing footnotes, endnotes and comments.
@@ -419,7 +424,7 @@ class AuxReader(object):
         self.docname = docname
         self.zipf = zipf
         self.parser = make_parser()
-        self.handler = ContextHandler()
+        self.handler = ContextHandler(**options)
         self.parser.setContentHandler(self.handler)
 
     def process(self):
